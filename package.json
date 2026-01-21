@@ -11,7 +11,12 @@
   "dependencies": {
     "next": "16.1.4",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "lucide-react": "^0.383.0",
+    "framer-motion": "^11.0.0",
+    "zustand": "^4.4.0",
+    "axios": "^1.6.0",
+    "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

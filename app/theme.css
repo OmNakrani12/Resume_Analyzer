@@ -1,0 +1,148 @@
+/* Theme CSS Variables - Applied by ThemeContext */
+:root {
+  /* Primary Colors */
+  --color-primary: #2563eb;
+  --color-primary-dark: #1e40af;
+  --color-primary-light: #3b82f6;
+  
+  /* Secondary Colors */
+  --color-secondary: #10b981;
+  --color-danger: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  
+  /* Background & Surface */
+  --color-background: #f9fafb;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  
+  /* Text Colors */
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  
+  /* Gray Palette */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+}
+
+/* Apply theme to entire page */
+html {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Primary color buttons */
+.bg-primary,
+.bg-blue-600 {
+  background-color: var(--color-primary) !important;
+}
+
+.bg-primary:hover,
+.bg-blue-600:hover {
+  background-color: var(--color-primary-dark) !important;
+}
+
+.text-primary,
+.text-blue-600 {
+  color: var(--color-primary) !important;
+}
+
+/* Secondary color */
+.bg-secondary {
+  background-color: var(--color-secondary) !important;
+}
+
+.text-secondary {
+  color: var(--color-secondary) !important;
+}
+
+/* Danger color */
+.bg-danger {
+  background-color: var(--color-danger) !important;
+}
+
+.text-danger {
+  color: var(--color-danger) !important;
+}
+
+/* Success color */
+.bg-success {
+  background-color: var(--color-success) !important;
+}
+
+.text-success {
+  color: var(--color-success) !important;
+}
+
+/* Warning color */
+.bg-warning {
+  background-color: var(--color-warning) !important;
+}
+
+.text-warning {
+  color: var(--color-warning) !important;
+}
+
+/* Border color */
+.border-gray-300 {
+  border-color: var(--color-border) !important;
+}
+
+/* Background colors */
+.bg-gray-50 {
+  background-color: var(--color-gray-50) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--color-gray-100) !important;
+}
+
+.bg-gray-900 {
+  background-color: var(--color-gray-900) !important;
+}
+
+/* Text hover states */
+.hover\:text-blue-600:hover {
+  color: var(--color-primary) !important;
+}
+
+/* Smooth transitions when theme changes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Focus states use primary color */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}

@@ -1,0 +1,104 @@
+'use client'
+
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { ArrowRight, Sparkles } from 'lucide-react'
+
+export default function Hero() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.3,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: 'easeOut' },
+    },
+  }
+
+  return (
+    <section className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 py-20">
+      <motion.div
+        className="max-w-4xl mx-auto text-center"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Badge */}
+        <motion.div variants={itemVariants} className="mb-6">
+          <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">
+            <Sparkles size={16} />
+            Powered by AI
+          </span>
+        </motion.div>
+
+        {/* Main Heading */}
+        <motion.h1
+          variants={itemVariants}
+          className="text-5xl md:text-7xl font-bold text-gray-900 mb-6"
+        >
+          Optimize Your Resume,{' '}
+          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Land Your Dream Job
+          </span>
+        </motion.h1>
+
+        {/* Subheading */}
+        <motion.p
+          variants={itemVariants}
+          className="text-xl md:text-2xl text-gray-600 mb-8"
+        >
+          Get AI-powered insights to improve your resume and increase your chances of getting interviews
+        </motion.p>
+
+        {/* CTA Buttons */}
+        <motion.div
+          variants={itemVariants}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
+        >
+          <Link
+            href="/analyze"
+            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition transform hover:scale-105"
+          >
+            Analyze Your Resume
+            <ArrowRight size={20} />
+          </Link>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-blue-600 px-8 py-4 rounded-lg font-semibold border-2 border-blue-600 transition"
+          >
+            View Pricing
+          </Link>
+        </motion.div>
+
+        {/* Stats */}
+        <motion.div
+          variants={itemVariants}
+          className="mt-16 grid md:grid-cols-3 gap-8"
+        >
+          <div className="bg-white rounded-lg p-6 shadow-lg">
+            <p className="text-3xl font-bold text-blue-600 mb-2">10K+</p>
+            <p className="text-gray-600">Resumes Analyzed</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-lg">
+            <p className="text-3xl font-bold text-blue-600 mb-2">95%</p>
+            <p className="text-gray-600">Success Rate</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-lg">
+            <p className="text-3xl font-bold text-blue-600 mb-2">4.8★</p>
+            <p className="text-gray-600">Average Rating</p>
+          </div>
+        </motion.div>
+      </motion.div>
+    </section>
+  )
+}
