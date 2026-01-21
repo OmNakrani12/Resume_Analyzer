@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "next": "16.1.4",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "lucide-react": "^0.383.0",
     "framer-motion": "^11.0.0",
     "zustand": "^4.4.0",
