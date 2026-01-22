@@ -82,7 +82,7 @@ export default function SignUp() {
           fullName: formData.fullName,
         }),
       });
-
+      localStorage.setItem("user", JSON.stringify({ uid: user.uid, email: user.email }))
       // 4️⃣ Redirect
       router.push("/dashboard");
 

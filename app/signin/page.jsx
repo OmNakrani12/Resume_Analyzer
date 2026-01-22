@@ -42,7 +42,7 @@ export default function SignIn() {
           Authorization: `Bearer ${token}`,
         },
       })
-
+      localStorage.setItem("user", JSON.stringify({ uid: user.uid, email: user.email }))
       router.push("/dashboard")
 
     } catch (error) {
