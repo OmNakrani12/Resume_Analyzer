@@ -16,15 +16,13 @@ export default function AnalyzePage() {
         transition={{ duration: 0.8 }}
         className="max-w-6xl mx-auto"
       >
-        {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Analyze Your Resume</h1>
           <p className="text-xl text-gray-600">Upload your resume and get AI-powered insights to improve it</p>
         </div>
 
-        {/* Content Grid */}
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Upload Section */}
+
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -35,7 +33,6 @@ export default function AnalyzePage() {
             <FileUpload onAnalysis={setAnalysisResult} />
           </motion.div>
 
-          {/* Results Section */}
           {analysisResult && (
             <motion.div
               initial={{ opacity: 0, x: 30 }}

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, User, CheckCircle } from 'lucide-react'
-import { authAPI } from '@/lib/api'
+import { auth } from "@/app/firebase/config"
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function SignUp() {
   const router = useRouter()
@@ -21,61 +22,77 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
+  async function signUp(email, password) {
+    try {
+      const userCredential =
+        await createUserWithEmailAndPassword(auth, email, password);
+
+      const user = userCredential.user;
+
+      console.log("User created:", user.uid);
+      return user;
+    } catch (error) {
+      console.error("Sign-up error:", error.message);
+      throw error;
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       if (!Object.values(formData).every(v => v)) {
-        setError('Please fill in all fields')
-        setLoading(false)
-        return
-      }
-
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters')
-        setLoading(false)
-        return
+        throw new Error("Please fill in all fields");
       }
 
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match')
-        setLoading(false)
-        return
+        throw new Error("Passwords do not match");
       }
 
       if (!agreedToTerms) {
-        setError('Please agree to the terms and conditions')
-        setLoading(false)
-        return
+        throw new Error("Please agree to terms");
       }
 
-      const response = await authAPI.register({
-        name: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
-      })
-      const { data } = response.data
+      // 1️⃣ Firebase Auth
+      const userCredential =
+        await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
 
-      // Store tokens
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('refreshToken', data.refreshToken)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      const user = userCredential.user;
 
-      router.push('/dashboard')
+      // 2️⃣ Get ID token
+      const token = await user.getIdToken();
+
+      // 3️⃣ Register user in backend
+      await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token,
+          fullName: formData.fullName,
+        }),
+      });
+
+      // 4️⃣ Redirect
+      router.push("/dashboard");
+
     } catch (err) {
-      setError(err.response?.data?.message || 'Sign up failed. Please try again.')
+      setError(err.message || "Sign up failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },

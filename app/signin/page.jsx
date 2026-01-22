@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
-import { authAPI } from '@/lib/api'
+import { auth } from "@/app/firebase/config"
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function SignIn() {
   const router = useRouter()
@@ -22,32 +23,44 @@ export default function SignIn() {
 
     try {
       if (!email || !password) {
-        setError('Please fill in all fields')
-        setLoading(false)
-        return
+        throw new Error('Please fill in all fields')
       }
 
-      if (!email.includes('@')) {
-        setError('Please enter a valid email')
-        setLoading(false)
-        return
+      const userCredential =
+        await signInWithEmailAndPassword(auth, email, password)
+
+      const user = userCredential.user
+      console.log("Logged in:", user.uid)
+
+      // 🔐 GET ID TOKEN
+      const token = await user.getIdToken()
+
+      // 🔐 CALL BACKEND WITH TOKEN (NO UID)
+      await fetch("/api/users", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      router.push("/dashboard")
+
+    } catch (error) {
+      switch (error.code) {
+        case "auth/user-not-found":
+          setError("No account found with this email.")
+          break
+        case "auth/wrong-password":
+          setError("Incorrect password.")
+          break
+        default:
+          setError("Sign in failed. Please try again.")
       }
-
-      const response = await authAPI.login({ email, password })
-      const { data } = response.data
-
-      // Store tokens
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('refreshToken', data.refreshToken)
-      localStorage.setItem('user', JSON.stringify(data.user))
-
-      router.push('/dashboard')
-    } catch (err) {
-      setError(err.response?.data?.message || 'Sign in failed. Please try again.')
     } finally {
       setLoading(false)
     }
   }
+
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -71,7 +84,7 @@ export default function SignIn() {
         animate="visible"
         className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md"
       >
-        {/* Header */}
+
         <motion.div
           custom={0}
           variants={itemVariants}
