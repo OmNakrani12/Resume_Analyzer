@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Menu, X, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
+import ProfileDropdown from './ProfileDropdown'
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -51,25 +52,14 @@ export default function Navigation() {
             ))}
           </div>
 
-          {/* Auth Buttons */}
+          {/* Profile Dropdown */}
           <motion.div
-            className="hidden md:flex items-center space-x-4"
+            className="hidden md:flex items-center"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link
-              href="/signin"
-              className="text-gray-700 hover:text-blue-600 font-medium transition"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition"
-            >
-              Sign Up
-            </Link>
+            <ProfileDropdown />
           </motion.div>
 
           {/* Mobile Menu Button */}

@@ -1,62 +1,81 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { auth, rtdb } from "@/app/firebase/admin";
+
+const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
 
 /**
- * CREATE / UPDATE USER PROFILE
+ * GET /api/users/profile - Get user profile
+ * Proxies to Python backend
  */
-export async function POST(req) {
+export async function GET(req) {
   try {
-    const session = cookies().get("session")?.value;
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId') || 'default_user';
 
-    // 🔐 VERIFY SESSION
-    const decoded = await auth.verifyIdToken(session);
-    const uid = decoded.uid;
-    const email = decoded.email;
-
-    const { fullName } = await req.json();
-
-    await rtdb.ref(`users/${uid}`).set({
-      fullName,
-      email,
-      role: "user",
-      plan: "free",
-      createdAt: Date.now(),
+    const response = await fetch(`${PYTHON_API_URL}/api/users/profile`, {
+      headers: {
+        'X-User-ID': userId
+      }
     });
 
-    return NextResponse.json({ success: true });
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch profile' },
+        { status: response.status }
+      );
+    }
+
+    const result = await response.json();
+    return NextResponse.json(result);
 
   } catch (err) {
-    console.error("POST /users error:", err);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.error("GET USER PROFILE ERROR:", err);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
 /**
- * GET CURRENT USER PROFILE
+ * POST /api/users/profile - Update user profile
+ * Proxies to Python backend
  */
-export async function GET() {
+export async function POST(req) {
   try {
-    // ✅ AWAIT cookies()
-    const cookieStore = await cookies();
-    const session = cookieStore.get("session")?.value;
+    const body = await req.json();
+    const userId = body.userId || 'default_user';
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const response = await fetch(`${PYTHON_API_URL}/api/users/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-ID': userId
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to update profile' },
+        { status: response.status }
+      );
     }
 
-    // 🔐 Verify token
-    const decoded = await auth.verifyIdToken(session);
-    const uid = decoded.uid;
-
-    const snapshot = await rtdb.ref(`users/${uid}`).get();
-    return NextResponse.json(snapshot.val());
+    const result = await response.json();
+    return NextResponse.json(result);
 
   } catch (err) {
-    console.error("GET /users error:", err);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.error("UPDATE USER PROFILE ERROR:", err);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
   }
+}
+
+/**
+ * PUT /api/users/profile - Alternative update method
+ */
+export async function PUT(req) {
+  return POST(req);
 }

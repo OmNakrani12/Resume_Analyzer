@@ -2,15 +2,14 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react'
-import { resumeAPI } from '@/lib/api'
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, TrendingUp } from 'lucide-react'
 
 export default function FileUpload({ onAnalysis }) {
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState('')
-  const [uploadedResumeId, setUploadedResumeId] = useState(null)
+  const [progress, setProgress] = useState(0)
 
   const handleDragOver = (e) => {
     e.preventDefault()
@@ -38,14 +37,14 @@ export default function FileUpload({ onAnalysis }) {
 
   const handleFile = (selectedFile) => {
     setError('')
-    
-    if (!selectedFile.name.match(/\.(pdf|doc|docx)$/i)) {
-      setError('Please upload a valid resume file (PDF, DOC, DOCX)')
+
+    if (!selectedFile.name.match(/\.(pdf|doc|docx|txt)$/i)) {
+      setError('Please upload a valid resume file (PDF, DOC, DOCX, TXT)')
       return
     }
 
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB')
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB')
       return
     }
 
@@ -60,35 +59,70 @@ export default function FileUpload({ onAnalysis }) {
 
     setIsAnalyzing(true)
     setError('')
+    setProgress(0)
 
     try {
-      // Step 1: Upload resume
+      // Create FormData
       const formData = new FormData()
-      formData.append('resume', file)
-      
-      const uploadResponse = await resumeAPI.upload(formData)
-      const resumeId = uploadResponse.data.data.resume.id
-      setUploadedResumeId(resumeId)
+      formData.append('file', file)
 
-      // Step 2: Analyze resume
-      const analysisResponse = await resumeAPI.analyze(resumeId)
-      const analysis = analysisResponse.data.data.analysis
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 10, 90))
+      }, 500)
 
-      const result = {
-        score: analysis.overallScore,
-        summary: `Your resume scored ${analysis.overallScore}/100`,
-        strengths: analysis.strengths,
-        improvements: analysis.improvements,
-        scores: analysis.scores,
-        extractedData: analysis.extractedData,
-        recommendations: analysis.recommendations,
+      // Call Python backend
+      const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001'
+      const response = await fetch(`${PYTHON_API_URL}/api/analyze`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      clearInterval(progressInterval)
+      setProgress(100)
+
+      // Better error handling for non-JSON responses
+      if (!response.ok) {
+        let errorMessage = 'Analysis failed'
+        const contentType = response.headers.get('content-type')
+
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } else {
+          // Response is not JSON (likely HTML error page)
+          const textError = await response.text()
+          if (textError.includes('Server') || response.status === 0) {
+            errorMessage = '❌ Backend server is not running!\n\nPlease start the Python backend:\n1. Open terminal\n2. cd backend\n3. python app.py'
+          } else {
+            errorMessage = `Server error: ${response.status} ${response.statusText}`
+          }
+        }
+        throw new Error(errorMessage)
       }
 
-      onAnalysis(result)
+      // Parse JSON response
+      const result = await response.json()
+
+      if (result.success && result.data) {
+        onAnalysis(result.data)
+      } else {
+        throw new Error('Invalid response from server')
+      }
+
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to analyze resume. Please try again.')
+      console.error('Analysis error:', err)
+
+      // Better error messages
+      let userMessage = err.message
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        userMessage = '❌ Cannot connect to backend!\n\nPlease ensure:\n1. Python backend is running on port 3001\n2. Run: cd backend && python app.py'
+      }
+
+      setError(userMessage || 'Failed to analyze resume. Please try again.')
     } finally {
       setIsAnalyzing(false)
+      setProgress(0)
     }
   }
 
@@ -99,12 +133,11 @@ export default function FileUpload({ onAnalysis }) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-3 border-dashed rounded-lg p-12 text-center transition cursor-pointer ${
-          isDragging
+        className={`border-3 border-dashed rounded-xl p-12 text-center transition cursor-pointer ${isDragging
             ? 'border-blue-600 bg-blue-50'
-            : 'border-gray-300 bg-gray-50 hover:border-gray-400'
-        }`}
-        whileHover={{ scale: 1.02 }}
+            : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+          }`}
+        whileHover={{ scale: 1.01 }}
       >
         <input
           type="file"
@@ -123,7 +156,8 @@ export default function FileUpload({ onAnalysis }) {
           <p className="text-lg font-semibold text-gray-900 mb-2">
             Drop your resume here
           </p>
-          <p className="text-gray-600">or click to browse (PDF, DOC, DOCX, TXT - Max 5MB)</p>
+          <p className="text-gray-600">or click to browse</p>
+          <p className="text-sm text-gray-500 mt-2">PDF, DOC, DOCX, TXT - Max 10MB</p>
         </label>
       </motion.div>
 
@@ -132,7 +166,7 @@ export default function FileUpload({ onAnalysis }) {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between"
+          className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <FileText className="text-blue-600" size={24} />
@@ -145,28 +179,69 @@ export default function FileUpload({ onAnalysis }) {
         </motion.div>
       )}
 
+      {/* Progress Bar */}
+      {isAnalyzing && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-2"
+        >
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600">Analyzing your resume...</span>
+            <span className="text-blue-600 font-semibold">{progress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <motion.div
+              className="bg-blue-600 h-2.5 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 text-center">
+            {progress < 30 && 'Extracting text from document...'}
+            {progress >= 30 && progress < 60 && 'Analyzing with AI...'}
+            {progress >= 60 && progress < 90 && 'Calculating ATS score and extracting skills...'}
+            {progress >= 90 && 'Generating learning roadmap...'}
+          </p>
+        </motion.div>
+      )}
+
       {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3"
+          className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-start gap-3"
         >
-          <AlertCircle className="text-red-600 flex-shrink-0" size={24} />
-          <p className="text-red-700">{error}</p>
+          <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={24} />
+          <div className="flex-1">
+            <p className="font-semibold text-red-900">Analysis Failed</p>
+            <p className="text-sm text-red-700 whitespace-pre-line mt-1">{error}</p>
+          </div>
         </motion.div>
       )}
 
       {/* Analyze Button */}
-      {file && (
+      {file && !isAnalyzing && (
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleAnalyze}
-          disabled={isAnalyzing}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition"
+          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-4 px-6 rounded-xl transition shadow-lg flex items-center justify-center gap-2"
         >
-          {isAnalyzing ? 'Analyzing...' : 'Analyze Resume'}
+          <TrendingUp size={20} />
+          Analyze Resume with AI
+        </motion.button>
+      )}
+
+      {isAnalyzing && (
+        <motion.button
+          disabled
+          className="w-full bg-gray-400 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"
+        >
+          <Loader2 className="animate-spin" size={20} />
+          Analyzing...
         </motion.button>
       )}
     </div>

@@ -24,50 +24,60 @@ export default function Dashboard() {
           router.push('/signin')
           return
         }
-        
-        setUser(JSON.parse(userStr))
 
-        // Fetch user profile
-        const profileResponse = await userAPI.getProfile()
-        const profile = profileResponse.data.data.user
+        const storedUser = JSON.parse(userStr)
+        setUser(storedUser)
+        const userId = storedUser?.uid || 'default_user'
 
-        // Fetch resumes
-        const resumesResponse = await resumeAPI.list(1, 10)
-        const resumesList = resumesResponse.data.data.resumes
+        // Fetch user profile and resumes
+        const [profileResponse, resumesResponse] = await Promise.all([
+          userAPI.getProfile(userId),
+          resumeAPI.list(userId, 1, 10),
+        ])
+
+        // Handle profile data with fallback
+        const profile = profileResponse?.data?.data || {
+          resumesAnalyzed: 0,
+          resumeLimit: 10,
+          subscription: 'free',
+          email: storedUser.email || 'user@example.com'
+        }
+
+        const resumesList = resumesResponse?.data?.data?.resumes || []
 
         setResumes(resumesList)
 
         // Calculate stats
-        const avgScore = resumesList.length > 0 
-          ? Math.round(resumesList.reduce((sum, r) => sum + (r.score || 0), 0) / resumesList.length)
+        const avgScore = resumesList.length > 0
+          ? Math.round(resumesList.reduce((sum, r) => sum + (r.overallScore || r.score || 0), 0) / resumesList.length)
           : 0
 
         setStats([
           {
             icon: FileText,
             label: 'Resumes Analyzed',
-            value: profile.resumesAnalyzed.toString(),
-            change: `${profile.resumeLimit - profile.resumesAnalyzed} remaining`,
+            value: (profile.resumesAnalyzed || resumesList.length).toString(),
+            change: `${(profile.resumeLimit || 10) - (profile.resumesAnalyzed || resumesList.length)} remaining`,
           },
           {
             icon: TrendingUp,
             label: 'Average Score',
             value: avgScore.toString(),
-            change: profile.subscription,
+            change: (profile.subscription || 'free').charAt(0).toUpperCase() + (profile.subscription || 'free').slice(1),
           },
           {
             icon: BarChart3,
             label: 'Subscription',
-            value: profile.subscription.charAt(0).toUpperCase() + profile.subscription.slice(1),
-            change: profile.email,
+            value: (profile.subscription || 'free').charAt(0).toUpperCase() + (profile.subscription || 'free').slice(1),
+            change: profile.email || storedUser.email || 'user@example.com',
           },
         ])
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load dashboard')
-        if (err.response?.status === 401) {
-          localStorage.clear()
-          router.push('/signin')
-        }
+        console.error('Dashboard error:', err)
+        setError(err.response?.data?.error || err.message || 'Failed to load dashboard. Please try again.')
+
+        // Don't redirect on error, just show error message
+        // Allow user to stay on dashboard with error displayed
       } finally {
         setLoading(false)
       }
@@ -142,7 +152,7 @@ export default function Dashboard() {
             >
               Analyze New
             </Link>
-            <button 
+            <button
               onClick={handleLogout}
               className="bg-gray-200 hover:bg-gray-300 text-gray-900 px-6 py-2 rounded-lg font-semibold transition"
             >
@@ -235,16 +245,15 @@ export default function Dashboard() {
                       <td className="py-4 px-4 text-gray-900">{resume.fileName}</td>
                       <td className="py-4 px-4">
                         <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                          {resume.score || 'N/A'}
+                          {resume.overallScore || resume.score || 'N/A'}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-gray-600">
-                        {new Date(resume.uploadedAt).toLocaleDateString()}
+                        {new Date(resume.createdAt || resume.uploadedAt || Date.now()).toLocaleDateString()}
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          resume.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${resume.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
                           {resume.status.charAt(0).toUpperCase() + resume.status.slice(1)}
                         </span>
                       </td>

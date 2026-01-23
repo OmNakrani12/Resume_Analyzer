@@ -1,15 +1,80 @@
 import { NextResponse } from "next/server";
-import { rtdb } from "@/app/firebase/admin";
-import { randomUUID } from "crypto";
 
+const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
+
+/**
+ * POST /api/jobs/match - Match resume with job description
+ */
 export async function POST(req) {
-  const jobId = randomUUID();
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  await rtdb.ref(`jobs/${jobId}`).set({
-    ...body,
-    createdAt: Date.now(),
-  });
+    if (!body.jobDescription) {
+      return NextResponse.json(
+        { success: false, error: 'Job description is required' },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json({ jobId });
+    const response = await fetch(`${PYTHON_API_URL}/api/jobs/match`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Job matching failed' },
+        { status: response.status }
+      );
+    }
+
+    const result = await response.json();
+    return NextResponse.json(result);
+
+  } catch (err) {
+    console.error("JOB MATCH ERROR:", err);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET /api/jobs/suggestions - Get job suggestions
+ */
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const skills = searchParams.get('skills')?.split(',') || [];
+    const role = searchParams.get('role') || 'Software Engineer';
+
+    const response = await fetch(`${PYTHON_API_URL}/api/jobs/suggestions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ skills, role })
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to get suggestions' },
+        { status: response.status }
+      );
+    }
+
+    const result = await response.json();
+    return NextResponse.json(result);
+
+  } catch (err) {
+    console.error("JOB SUGGESTIONS ERROR:", err);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }

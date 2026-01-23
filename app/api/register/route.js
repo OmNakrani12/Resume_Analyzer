@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth, rtdb } from "@/app/firebase/admin";
+import { adminAuth, rtdb } from "@/app/firebase/admin";
 
 export async function POST(req) {
   try {
@@ -13,7 +13,7 @@ export async function POST(req) {
     }
 
     // 🔐 Verify token
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
     const email = decoded.email;
 

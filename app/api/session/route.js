@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/app/firebase/config";
+import { adminAuth } from "@/app/firebase/admin";
 
 export async function POST(req) {
   try {
     const { token } = await req.json();
 
     // 🔐 Verify Firebase token
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
 
     // 🍪 Set HttpOnly cookie
