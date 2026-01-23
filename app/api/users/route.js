@@ -1,34 +1,25 @@
-import { NextResponse } from "next/server";
-
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
+import { NextResponse } from 'next/server';
+import dataStore from '@/lib/storage/dataStore';
 
 /**
- * GET /api/users/profile - Get user profile
- * Proxies to Python backend
+ * GET /api/users - Get user profile
  */
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || 'default_user';
+    const userId = searchParams.get('userId') || req.headers.get('X-User-ID') || 'default_user';
 
-    const response = await fetch(`${PYTHON_API_URL}/api/users/profile`, {
-      headers: {
-        'X-User-ID': userId
-      }
-    });
+    const user = dataStore.getUser(userId);
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch profile' },
-        { status: response.status }
-      );
-    }
-
-    const result = await response.json();
-    return NextResponse.json(result);
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: user,
+      },
+      { status: 200 }
+    );
   } catch (err) {
-    console.error("GET USER PROFILE ERROR:", err);
+    console.error('GET USER PROFILE ERROR:', err);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -37,35 +28,34 @@ export async function GET(req) {
 }
 
 /**
- * POST /api/users/profile - Update user profile
- * Proxies to Python backend
+ * POST /api/users - Update user profile
  */
 export async function POST(req) {
   try {
     const body = await req.json();
-    const userId = body.userId || 'default_user';
+    const userId = body.userId || req.headers.get('X-User-ID') || 'default_user';
 
-    const response = await fetch(`${PYTHON_API_URL}/api/users/profile`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': userId
+    const userData = {
+      name: body.fullName || body.name || '',
+      email: body.email || '',
+      phone: body.phone || '',
+      location: body.location || '',
+      bio: body.bio || '',
+      jobTitle: body.jobTitle || '',
+    };
+
+    const updated = dataStore.saveUser(userId, userData);
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Profile updated successfully',
+        data: updated,
       },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to update profile' },
-        { status: response.status }
-      );
-    }
-
-    const result = await response.json();
-    return NextResponse.json(result);
-
+      { status: 200 }
+    );
   } catch (err) {
-    console.error("UPDATE USER PROFILE ERROR:", err);
+    console.error('UPDATE USER PROFILE ERROR:', err);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -74,7 +64,7 @@ export async function POST(req) {
 }
 
 /**
- * PUT /api/users/profile - Alternative update method
+ * PUT /api/users - Alternative update method
  */
 export async function PUT(req) {
   return POST(req);

@@ -1,79 +1,53 @@
-import { NextResponse } from "next/server";
-
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
+import { NextResponse } from 'next/server';
+import dataStore from '@/lib/storage/dataStore';
 
 /**
  * GET /api/preferences - Get user preferences
  */
 export async function GET(req) {
     try {
-        const { searchParams } = new URL(req.url);
-        const userId = searchParams.get('userId') || 'default_user';
+        const userId = req.headers.get('X-User-ID') || 'default_user';
+        const preferences = dataStore.getPreferences(userId);
 
-        const response = await fetch(`${PYTHON_API_URL}/api/users/preferences`, {
-            headers: {
-                'X-User-ID': userId
-            }
-        });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, error: 'Failed to fetch preferences' },
-                { status: response.status }
-            );
-        }
-
-        const result = await response.json();
-        return NextResponse.json(result);
-
-    } catch (err) {
-        console.error("GET PREFERENCES ERROR:", err);
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
-            { status: 500 }
-        );
-    }
-}
-
-/**
- * POST /api/preferences - Update user preferences
- */
-export async function POST(req) {
-    try {
-        const body = await req.json();
-        const userId = body.userId || 'default_user';
-
-        const response = await fetch(`${PYTHON_API_URL}/api/users/preferences`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-User-ID': userId
+            {
+                success: true,
+                data: preferences,
             },
-            body: JSON.stringify(body)
-        });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, error: 'Failed to update preferences' },
-                { status: response.status }
-            );
-        }
-
-        const result = await response.json();
-        return NextResponse.json(result);
-
+            { status: 200 }
+        );
     } catch (err) {
-        console.error("UPDATE PREFERENCES ERROR:", err);
+        console.error('GET PREFERENCES ERROR:', err);
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
+            { success: false, error: 'Failed to fetch preferences' },
             { status: 500 }
         );
     }
 }
 
 /**
- * PUT /api/preferences - Alternative update method
+ * PUT /api/preferences - Update user preferences
  */
 export async function PUT(req) {
-    return POST(req);
+    try {
+        const userId = req.headers.get('X-User-ID') || 'default_user';
+        const data = await req.json();
+
+        const updated = dataStore.savePreferences(userId, data);
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Preferences updated successfully',
+                data: updated,
+            },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error('UPDATE PREFERENCES ERROR:', err);
+        return NextResponse.json(
+            { success: false, error: 'Failed to update preferences' },
+            { status: 500 }
+        );
+    }
 }

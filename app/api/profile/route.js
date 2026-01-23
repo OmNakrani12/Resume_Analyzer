@@ -1,72 +1,128 @@
-import { NextResponse } from "next/server";
-
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
+import { NextResponse } from 'next/server'
+import { adminAuth, rtdb } from '@/app/firebase/admin'
 
 /**
- * GET /api/profile - Get user profile
+ * Helper: Verify Firebase token and get userId
  */
-export async function GET(req) {
-    try {
-        const { searchParams } = new URL(req.url);
-        const userId = searchParams.get('userId') || 'default_user';
+async function getUserIdFromRequest(req) {
+  const authHeader = req.headers.get('authorization')
 
-        const response = await fetch(`${PYTHON_API_URL}/api/users/profile`, {
-            headers: {
-                'X-User-ID': userId
-            }
-        });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Unauthorized')
+  }
 
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, error: 'Failed to fetch profile' },
-                { status: response.status }
-            );
-        }
+  const token = authHeader.split('Bearer ')[1]
+  const decoded = await adminAuth.verifyIdToken(token)
 
-        const result = await response.json();
-        return NextResponse.json(result);
-
-    } catch (err) {
-        console.error("GET PROFILE ERROR:", err);
-        return NextResponse.json(
-            { success: false, error: 'Internal server error' },
-            { status: 500 }
-        );
-    }
+  return decoded.uid
 }
 
 /**
- * PUT /api/profile - Update user profile
+ * GET /api/profile
+ * Get logged-in user's profile
+ */
+export async function GET(req) {
+  try {
+    // Extract token from Authorization header
+    const authHeader = req.headers.get('authorization')
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - No token provided' },
+        { status: 401 }
+      )
+    }
+
+    const token = authHeader.split('Bearer ')[1]
+    const decoded = await adminAuth.verifyIdToken(token)
+    const userId = decoded.uid
+
+    const snapshot = await rtdb.ref(`users/${userId}`).get()
+
+    const userProfile = snapshot.exists()
+      ? snapshot.val()
+      : {
+        fullName: '',
+        email: '',
+        phone: '',
+        location: '',
+        bio: '',
+        jobTitle: '',
+      }
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: userProfile,
+      },
+      { status: 200 }
+    )
+  } catch (err) {
+    console.error('GET PROFILE ERROR:', err.message)
+
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+}
+
+/**
+ * PUT /api/profile
+ * Update logged-in user's profile
  */
 export async function PUT(req) {
-    try {
-        const body = await req.json();
-        const userId = body.userId || 'default_user';
+  try {
+    // Extract token from Authorization header
+    const authHeader = req.headers.get('authorization')
 
-        const response = await fetch(`${PYTHON_API_URL}/api/users/profile`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-User-ID': userId
-            },
-            body: JSON.stringify(body)
-        });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, error: 'Failed to update profile' },
-                { status: response.status }
-            );
-        }
-
-        const result = await response.json();
-        return NextResponse.json(result);
-
-    } catch (err) {
-        console.error("UPDATE PROFILE ERROR:", err);
-        return NextResponse.json(
-            { success: false, error: 'Internal server error' },
-            { status: 500 }
-        );
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - No token provided' },
+        { status: 401 }
+      )
     }
+
+    const token = authHeader.split('Bearer ')[1]
+    const decoded = await adminAuth.verifyIdToken(token)
+    const userId = decoded.uid
+
+    const data = await req.json()
+
+    if (!data) {
+      return NextResponse.json(
+        { success: false, error: 'No data provided' },
+        { status: 400 }
+      )
+    }
+
+    const userData = {
+      fullName: data.fullName ?? '',
+      email: data.email ?? '',
+      phone: data.phone ?? '',
+      location: data.location ?? '',
+      bio: data.bio ?? '',
+      jobTitle: data.jobTitle ?? '',
+      updatedAt: Date.now(),
+    }
+
+    // ✅ Save to Firebase Realtime Database
+    await rtdb.ref(`users/${userId}`).update(userData)
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Profile updated successfully',
+        data: userData,
+      },
+      { status: 200 }
+    )
+  } catch (err) {
+    console.error('UPDATE PROFILE ERROR:', err.message)
+
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
 }

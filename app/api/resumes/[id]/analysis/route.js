@@ -1,34 +1,32 @@
-import { NextResponse } from "next/server";
-
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
+import { NextResponse } from 'next/server';
+import dataStore from '@/lib/storage/dataStore';
 
 /**
- * GET /api/resumes/[id]/analysis - Get analysis results for a resume
+ * GET /api/resumes/[id]/analysis - Get analysis for specific resume
  */
 export async function GET(req, { params }) {
     try {
         const { id } = params;
+        const analysis = dataStore.getAnalysis(id);
 
-        const response = await fetch(`${PYTHON_API_URL}/api/resumes/${id}/analysis`, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
+        if (!analysis) {
             return NextResponse.json(
                 { success: false, error: 'Analysis not found' },
-                { status: response.status }
+                { status: 404 }
             );
         }
 
-        const result = await response.json();
-        return NextResponse.json(result);
-
-    } catch (err) {
-        console.error("GET ANALYSIS ERROR:", err);
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
+            {
+                success: true,
+                data: analysis,
+            },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error('GET ANALYSIS ERROR:', err);
+        return NextResponse.json(
+            { success: false, error: 'Failed to fetch analysis' },
             { status: 500 }
         );
     }

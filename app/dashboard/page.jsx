@@ -31,7 +31,7 @@ export default function Dashboard() {
 
         // Fetch user profile and resumes
         const [profileResponse, resumesResponse] = await Promise.all([
-          userAPI.getProfile(userId),
+          userAPI.getProfile(),
           resumeAPI.list(userId, 1, 10),
         ])
 

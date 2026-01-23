@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminAuth, rtdb } from "@/app/firebase/admin";
+import { sendEmail } from "@/lib/services/mailer";
+import { registrationEmail } from "@/lib/emailTemplates/registration";
 
 export async function POST(req) {
   try {
@@ -37,6 +39,11 @@ export async function POST(req) {
       maxAge: 60 * 60 * 24 * 5, // 5 days
     });
 
+    await sendEmail({
+      to : email,
+      subject : "Welcome to Resume Analyzer",
+      html: registrationEmail({name : fullName}),
+    })
     return response;
 
   } catch (err) {

@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
-import { auth } from "@/app/firebase/config"
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, googleProvider } from "@/app/firebase/config"
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 
 export default function SignIn() {
   const router = useRouter()
@@ -16,209 +16,145 @@ export default function SignIn() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // ✅ EMAIL LOGIN (UNCHANGED)
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      if (!email || !password) {
-        throw new Error('Please fill in all fields')
-      }
-
-      const userCredential =
-        await signInWithEmailAndPassword(auth, email, password)
-
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
-      console.log("Logged in:", user.uid)
 
-      // 🔐 GET ID TOKEN
-      const token = await user.getIdToken()
+      const token = await user.getIdToken(true)
 
-      // 🔐 CALL BACKEND WITH TOKEN (NO UID)
-      await fetch("/api/users", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      localStorage.setItem("user", JSON.stringify({ uid: user.uid, email: user.email }))
+      localStorage.setItem("token", token)
+      localStorage.setItem("user", JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+      }))
+
       router.push("/dashboard")
-
     } catch (error) {
-      switch (error.code) {
-        case "auth/user-not-found":
-          setError("No account found with this email.")
-          break
-        case "auth/wrong-password":
-          setError("Incorrect password.")
-          break
-        default:
-          setError("Sign in failed. Please try again.")
-      }
+      setError(error.message || "Sign in failed")
     } finally {
       setLoading(false)
     }
   }
 
+  // ✅ GOOGLE LOGIN (NEW)
+  const handleGoogleLogin = async () => {
+    setError('')
+    setLoading(true)
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
-  }
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const user = result.user
+      const token = await user.getIdToken(true)
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.1, duration: 0.5 },
-    }),
+      localStorage.setItem("token", token)
+      localStorage.setItem("user", JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        photo: user.photoURL,
+      }))
+
+      router.push("/dashboard")
+    } catch (err) {
+      console.error(err)
+      setError("Google login failed")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center px-4 py-12">
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md"
       >
 
-        <motion.div
-          custom={0}
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your ResumeAI account</p>
-        </motion.div>
+        <h1 className="text-3xl font-bold text-center mb-6">Welcome Back</h1>
 
-        {/* Error Alert */}
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2"
-          >
-            <span className="text-red-600">⚠️</span>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
             {error}
-          </motion.div>
+          </div>
         )}
 
+        {/* EMAIL LOGIN */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email Field */}
-          <motion.div
-            custom={1}
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
-          </motion.div>
+          <div className="relative">
+            <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg"
+              placeholder="Email"
+              required
+            />
+          </div>
 
-          {/* Password Field */}
-          <motion.div
-            custom={2}
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="••••••••"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-          </motion.div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 border rounded-lg"
+              placeholder="Password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-gray-400"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
 
-          {/* Remember Me & Forgot Password */}
-          <motion.div
-            custom={3}
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex items-center justify-between text-sm"
-          >
-            <label className="flex items-center gap-2 text-gray-700">
-              <input type="checkbox" className="w-4 h-4 rounded" />
-              Remember me
-            </label>
-            <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700 font-medium">
-              Forgot password?
-            </Link>
-          </motion.div>
-
-          {/* Submit Button */}
-          <motion.button
-            custom={4}
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
+          <button
             type="submit"
             disabled={loading}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg transition"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </motion.button>
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
         </form>
 
-        {/* Divider */}
-        <motion.div
-          custom={5}
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-          className="my-6 flex items-center gap-4"
-        >
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <span className="text-gray-500 text-sm">Or</span>
-          <div className="flex-1 h-px bg-gray-300"></div>
-        </motion.div>
+        {/* DIVIDER */}
+        <div className="my-6 flex items-center gap-4">
+          <div className="flex-1 h-px bg-gray-300" />
+          <span className="text-gray-500 text-sm">OR</span>
+          <div className="flex-1 h-px bg-gray-300" />
+        </div>
 
-        {/* Sign Up Link */}
-        <motion.div
-          custom={6}
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-center"
+        {/* 🔵 GOOGLE LOGIN BUTTON */}
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-3 border py-3 rounded-lg hover:bg-gray-50"
         >
-          <p className="text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-semibold">
-              Sign up
-            </Link>
-          </p>
-        </motion.div>
+          <img
+            src="https://www.svgrepo.com/show/475656/google-color.svg"
+            alt="Google"
+            className="w-5 h-5"
+          />
+          Continue with Google
+        </button>
+
+        {/* SIGN UP */}
+        <p className="text-center text-gray-600 mt-6">
+          Don’t have an account?{' '}
+          <Link href="/signup" className="text-blue-600 font-semibold">
+            Sign up
+          </Link>
+        </p>
       </motion.div>
     </div>
   )

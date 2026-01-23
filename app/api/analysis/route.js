@@ -1,12 +1,20 @@
-import { NextResponse } from "next/server";
-
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
+import { NextResponse } from 'next/server';
+import { writeFile, unlink } from 'fs/promises';
+import { join } from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import DocumentExtractor from '@/lib/services/documentExtractor';
+import AIAnalyzer from '@/lib/services/aiAnalyzer';
+import SkillExtractor from '@/lib/services/skillExtractor';
+import ATSScorer from '@/lib/services/atsScorer';
+import RoadmapGenerator from '@/lib/services/roadmapGenerator';
 
 /**
  * POST /api/analysis - Analyze resume
- * Proxies to Python backend for AI-powered analysis
+ * Complete AI-powered resume analysis
  */
 export async function POST(req) {
+  let filePath = null;
+
   try {
     const formData = await req.formData();
     const file = formData.get('file');
@@ -18,70 +26,141 @@ export async function POST(req) {
       );
     }
 
-    // Forward to Python backend
-    const pythonFormData = new FormData();
-    pythonFormData.append('file', file);
+    // Validate file type
+    const fileName = file.name;
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'txt'];
 
-    const response = await fetch(`${PYTHON_API_URL}/api/analyze`, {
-      method: 'POST',
-      body: pythonFormData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
+    if (!allowedExtensions.includes(fileExtension)) {
       return NextResponse.json(
-        { success: false, error: errorData.error || 'Analysis failed' },
-        { status: response.status }
+        { success: false, error: 'Invalid file type. Allowed: PDF, DOC, DOCX, TXT' },
+        { status: 400 }
       );
     }
 
-    const result = await response.json();
-    return NextResponse.json(result);
+    // Save file temporarily
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const tempFileName = `${uuidv4()}.${fileExtension}`;
+    filePath = join(process.cwd(), 'tmp', tempFileName);
 
+    // Ensure tmp directory exists
+    try {
+      await writeFile(filePath, buffer);
+    } catch (err) {
+      // Create tmp directory if it doesn't exist
+      const { mkdir } = await import('fs/promises');
+      await mkdir(join(process.cwd(), 'tmp'), { recursive: true });
+      await writeFile(filePath, buffer);
+    }
+
+    // Step 1: Extract text from document
+    const extractionResult = await DocumentExtractor.extractText(filePath, fileExtension);
+
+    if (!extractionResult.success) {
+      // Clean up
+      if (filePath) {
+        try {
+          await unlink(filePath);
+        } catch (e) {
+          console.error('Failed to delete temp file:', e);
+        }
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Text extraction failed: ${extractionResult.error || 'Unknown error'}`,
+        },
+        { status: 500 }
+      );
+    }
+
+    const resumeText = extractionResult.text;
+
+    // Step 2: Extract skills
+    const skillAnalysis = SkillExtractor.analyzeSkills(resumeText);
+
+    // Step 3: Calculate ATS score
+    const atsResult = ATSScorer.calculateAtsScore(resumeText, skillAnalysis);
+
+    // Step 4: AI-powered analysis
+    const aiAnalyzer = new AIAnalyzer();
+    const aiResult = await aiAnalyzer.analyzeResume(resumeText);
+
+    // Step 5: Generate learning roadmap
+    const roadmapResult = RoadmapGenerator.generateRoadmap(
+      skillAnalysis.suggested_skills,
+      skillAnalysis.detected_role
+    );
+
+    // Clean up uploaded file
+    if (filePath) {
+      try {
+        await unlink(filePath);
+      } catch (e) {
+        console.error('Failed to delete temp file:', e);
+      }
+    }
+
+    // Compile comprehensive response
+    const response = {
+      success: true,
+      data: {
+        extraction: {
+          word_count: extractionResult.word_count,
+          char_count: extractionResult.char_count,
+        },
+        ai_analysis: aiResult.analysis,
+        skills: {
+          current: skillAnalysis.current_skills,
+          suggested: skillAnalysis.suggested_skills,
+          detected_role: skillAnalysis.detected_role,
+          skill_gap_count: skillAnalysis.skill_gap_count,
+        },
+        ats_score: {
+          overall_score: atsResult.overall_ats_score,
+          category_scores: atsResult.category_scores,
+          recommendations: atsResult.recommendations,
+          ats_friendly: atsResult.ats_friendly,
+        },
+        roadmap: {
+          items: roadmapResult.roadmap,
+          phases: roadmapResult.phases,
+          total_time: roadmapResult.total_estimated_time,
+        },
+      },
+    };
+
+    return NextResponse.json(response, { status: 200 });
   } catch (err) {
-    console.error("ANALYSIS API ERROR:", err);
+    console.error('ANALYSIS API ERROR:', err);
+
+    // Clean up on error
+    if (filePath) {
+      try {
+        await unlink(filePath);
+      } catch (e) {
+        console.error('Failed to delete temp file:', e);
+      }
+    }
+
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: `Analysis failed: ${err.message}` },
       { status: 500 }
     );
   }
 }
 
 /**
- * GET /api/analysis/history - Get analysis history
+ * GET /api/analysis/health - Health check
  */
 export async function GET(req) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || 'default_user';
-    const page = searchParams.get('page') || '1';
-    const limit = searchParams.get('limit') || '10';
-
-    // Forward to Python backend
-    const response = await fetch(
-      `${PYTHON_API_URL}/api/resumes?page=${page}&limit=${limit}`,
-      {
-        headers: {
-          'X-User-ID': userId
-        }
-      }
-    );
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch history' },
-        { status: response.status }
-      );
-    }
-
-    const result = await response.json();
-    return NextResponse.json(result);
-
-  } catch (err) {
-    console.error("GET ANALYSIS HISTORY ERROR:", err);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      success: true,
+      message: 'Resume Analyzer API is running',
+      version: '2.0.0',
+    },
+    { status: 200 }
+  );
 }

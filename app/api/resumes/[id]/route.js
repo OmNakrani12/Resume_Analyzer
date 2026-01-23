@@ -1,64 +1,32 @@
-import { NextResponse } from "next/server";
-
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001';
+import { NextResponse } from 'next/server';
+import dataStore from '@/lib/storage/dataStore';
 
 /**
- * GET /api/resumes/[id] - Get specific resume details
+ * GET /api/resumes/[id] - Get specific resume
  */
 export async function GET(req, { params }) {
     try {
         const { id } = params;
+        const resume = dataStore.getResume(id);
 
-        const response = await fetch(`${PYTHON_API_URL}/api/resumes/${id}`, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
+        if (!resume) {
             return NextResponse.json(
                 { success: false, error: 'Resume not found' },
-                { status: response.status }
+                { status: 404 }
             );
         }
 
-        const result = await response.json();
-        return NextResponse.json(result);
-
-    } catch (err) {
-        console.error("GET RESUME DETAIL ERROR:", err);
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
-            { status: 500 }
+            {
+                success: true,
+                data: resume,
+            },
+            { status: 200 }
         );
-    }
-}
-
-/**
- * DELETE /api/resumes/[id] - Delete a resume
- */
-export async function DELETE(req, { params }) {
-    try {
-        const { id } = params;
-
-        const response = await fetch(`${PYTHON_API_URL}/api/resumes/${id}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, error: 'Failed to delete resume' },
-                { status: response.status }
-            );
-        }
-
-        const result = await response.json();
-        return NextResponse.json(result);
-
     } catch (err) {
-        console.error("DELETE RESUME ERROR:", err);
+        console.error('GET RESUME ERROR:', err);
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
+            { success: false, error: 'Failed to fetch resume' },
             { status: 500 }
         );
     }
@@ -70,30 +38,67 @@ export async function DELETE(req, { params }) {
 export async function PUT(req, { params }) {
     try {
         const { id } = params;
-        const body = await req.json();
+        const data = await req.json();
 
-        const response = await fetch(`${PYTHON_API_URL}/api/resumes/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        });
-
-        if (!response.ok) {
+        const resume = dataStore.getResume(id);
+        if (!resume) {
             return NextResponse.json(
-                { success: false, error: 'Failed to update resume' },
-                { status: response.status }
+                { success: false, error: 'Resume not found' },
+                { status: 404 }
             );
         }
 
-        const result = await response.json();
-        return NextResponse.json(result);
+        // Update allowed fields
+        const updates = {};
+        if (data.fileName) updates.fileName = data.fileName;
+        if ('notes' in data) updates.notes = data.notes;
 
-    } catch (err) {
-        console.error("UPDATE RESUME ERROR:", err);
+        const updated = dataStore.updateResume(id, updates);
+
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
+            {
+                success: true,
+                message: 'Resume updated successfully',
+                data: updated,
+            },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error('UPDATE RESUME ERROR:', err);
+        return NextResponse.json(
+            { success: false, error: 'Failed to update resume' },
+            { status: 500 }
+        );
+    }
+}
+
+/**
+ * DELETE /api/resumes/[id] - Delete resume
+ */
+export async function DELETE(req, { params }) {
+    try {
+        const { id } = params;
+
+        const deleted = dataStore.deleteResume(id);
+
+        if (!deleted) {
+            return NextResponse.json(
+                { success: false, error: 'Resume not found' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Resume deleted successfully',
+            },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error('DELETE RESUME ERROR:', err);
+        return NextResponse.json(
+            { success: false, error: 'Failed to delete resume' },
             { status: 500 }
         );
     }

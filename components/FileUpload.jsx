@@ -71,9 +71,8 @@ export default function FileUpload({ onAnalysis }) {
         setProgress(prev => Math.min(prev + 10, 90))
       }, 500)
 
-      // Call Python backend
-      const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:3001'
-      const response = await fetch(`${PYTHON_API_URL}/api/analyze`, {
+      // Call Next.js API route
+      const response = await fetch('/api/analysis', {
         method: 'POST',
         body: formData,
       })
@@ -91,12 +90,7 @@ export default function FileUpload({ onAnalysis }) {
           errorMessage = errorData.error || errorMessage
         } else {
           // Response is not JSON (likely HTML error page)
-          const textError = await response.text()
-          if (textError.includes('Server') || response.status === 0) {
-            errorMessage = '❌ Backend server is not running!\n\nPlease start the Python backend:\n1. Open terminal\n2. cd backend\n3. python app.py'
-          } else {
-            errorMessage = `Server error: ${response.status} ${response.statusText}`
-          }
+          errorMessage = `Server error: ${response.status} ${response.statusText}`
         }
         throw new Error(errorMessage)
       }
@@ -116,7 +110,7 @@ export default function FileUpload({ onAnalysis }) {
       // Better error messages
       let userMessage = err.message
       if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-        userMessage = '❌ Cannot connect to backend!\n\nPlease ensure:\n1. Python backend is running on port 3001\n2. Run: cd backend && python app.py'
+        userMessage = '❌ Cannot connect to server!\n\nPlease ensure:\n1. Next.js server is running\n2. Run: npm run dev'
       }
 
       setError(userMessage || 'Failed to analyze resume. Please try again.')
@@ -134,8 +128,8 @@ export default function FileUpload({ onAnalysis }) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`border-3 border-dashed rounded-xl p-12 text-center transition cursor-pointer ${isDragging
-            ? 'border-blue-600 bg-blue-50'
-            : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+          ? 'border-blue-600 bg-blue-50'
+          : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
           }`}
         whileHover={{ scale: 1.01 }}
       >
