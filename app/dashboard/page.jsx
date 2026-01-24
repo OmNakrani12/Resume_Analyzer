@@ -254,7 +254,8 @@ export default function Dashboard() {
                       <td className="py-4 px-4">
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${resume.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                          {resume.status.charAt(0).toUpperCase() + resume.status.slice(1)}
+                          {(resume.status || 'completed').charAt(0).toUpperCase() +
+                          (resume.status || 'completed').slice(1)}
                         </span>
                       </td>
                       <td className="py-4 px-4">

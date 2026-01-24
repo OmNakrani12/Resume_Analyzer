@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, TrendingUp } from 'lucide-react'
+import { resumeAPI } from '@/lib/api'
 
 export default function FileUpload({ onAnalysis }) {
   const [isDragging, setIsDragging] = useState(false)
@@ -97,8 +98,10 @@ export default function FileUpload({ onAnalysis }) {
 
       // Parse JSON response
       const result = await response.json()
-
+      console.log('Analysis result:', result)
       if (result.success && result.data) {
+        await resumeAPI.saveAnalysis(result.data);
+        console.log("After Analysis Save:", result.data);
         onAnalysis(result.data)
       } else {
         throw new Error('Invalid response from server')

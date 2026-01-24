@@ -23,9 +23,7 @@ async function getUserIdFromRequest(req) {
  */
 export async function GET(req) {
   try {
-    // Extract token from Authorization header
     const authHeader = req.headers.get('authorization')
-
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - No token provided' },
@@ -49,7 +47,7 @@ export async function GET(req) {
         bio: '',
         jobTitle: '',
       }
-
+      console.log('USER PROFILE:', userProfile)
     return NextResponse.json(
       {
         success: true,

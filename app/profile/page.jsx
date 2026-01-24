@@ -36,12 +36,12 @@ export default function ProfilePage() {
         const storedUser = JSON.parse(userStr)
         setUser(storedUser)
         const userId = storedUser?.uid || 'default_user'
-
+        console.log('Fetching profile for userId:', userId);
         const response = await userAPI.getProfile(userId)
         const profileData = response?.data?.data || {}
-
+        console.log('Fetched profile data:', profileData);
         setProfile({
-          fullName: profileData.name || storedUser.displayName || '',
+          fullName: profileData.fullName || storedUser.displayName || '',
           email: profileData.email || storedUser.email || '',
           phone: profileData.phone || '',
           location: profileData.location || '',
