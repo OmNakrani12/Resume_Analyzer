@@ -1,15 +1,26 @@
 import { NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { rtdb } from '@/app/firebase/admin'
+import { adminAuth } from '@/app/firebase/admin'
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url)
 
-    const userId = req.headers.get('X-User-ID') || 'default_user'
+    const authHeader = req.headers.get('authorization')
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return NextResponse.json(
+            { success: false, error: 'Unauthorized - No token provided' },
+            { status: 401 }
+          )
+        }
+    
+    const token = authHeader.split('Bearer ')[1]
+    const decoded = await adminAuth.verifyIdToken(token)
+    const userId = decoded.uid
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
-
+    console.log(userId);
     const snapshot = await rtdb.ref(`resumes/${userId}`).get()
 
     let resumes = snapshot.exists()
@@ -52,17 +63,28 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json()
-    const userId = req.headers.get('X-User-ID') || 'default_user'
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - No token provided' },
+        { status: 401 }
+      )
+    }
+
+    const token = authHeader.split('Bearer ')[1]
+    const decoded = await adminAuth.verifyIdToken(token)
+    const userId = decoded.uid
+    
 
     const resumeId = uuidv4()
     const createdAt = new Date().toISOString()
-
+    console.log("Body : " + JSON.stringify(body));
     const resumeData = {
       meta: {
         fileName: body.fileName || 'resume.pdf',
         fileSize: body.fileSize || 0,
-        overallScore: body.overallScore || 0,
-        atsScore: body.atsScore || 0,
+        overallScore: body.ai_analysis?.overallScore ?? 0,
+        atsScore: body.ats_score?.overall_score ?? 0,
         createdAt,
       },
       analysis: {

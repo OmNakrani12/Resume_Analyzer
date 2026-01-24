@@ -46,11 +46,19 @@ export default function Dashboard() {
         const resumesList = resumesResponse?.data?.data?.resumes || []
 
         setResumes(resumesList)
-
+        console.log('Fetched resumes:', resumesList.ai_analysis ? resumesList.ai_analysis : resumesList);
         // Calculate stats
-        const avgScore = resumesList.length > 0
-          ? Math.round(resumesList.reduce((sum, r) => sum + (r.overallScore || r.score || 0), 0) / resumesList.length)
-          : 0
+        const avgScore =
+          resumesList.length > 0
+            ? Math.round(
+                resumesList.reduce(
+                  (sum, r) =>
+                    sum + Number(r.overallScore ?? r.atsScore ?? 0),
+                  0
+                ) / resumesList.length
+              )
+            : 0
+
 
         setStats([
           {

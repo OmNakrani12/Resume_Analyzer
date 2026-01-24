@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { Menu, X, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ProfileDropdown from './ProfileDropdown'
+import Image from 'next/image'
+
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -28,7 +30,13 @@ export default function Navigation() {
             transition={{ duration: 0.5 }}
           >
             <Link href="/" className="flex items-center space-x-2">
-              <FileText className="text-blue-600" size={32} />
+              <Image
+                src="/logo.png"
+                alt="ResumeAI Logo"
+                width={36}
+                height={36}
+                className="object-contain"
+              />
               <span className="text-xl font-bold text-gray-900">ResumeAI</span>
             </Link>
           </motion.div>
