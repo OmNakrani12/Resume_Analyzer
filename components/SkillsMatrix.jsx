@@ -6,7 +6,12 @@ import { Code, Briefcase, Heart, TrendingUp, Plus } from 'lucide-react'
 export default function SkillsMatrix({ skillsData }) {
     if (!skillsData) return null
 
-    const { current, suggested, detected_role, skill_gap_count } = skillsData
+    const {
+        current = { technical: {}, soft: [], total_technical: 0 },
+        suggested = [],
+        detected_role = 'Professional',
+        skill_gap_count = 0
+    } = skillsData
 
     const categoryIcons = {
         languages: '💻',
@@ -36,41 +41,43 @@ export default function SkillsMatrix({ skillsData }) {
             </div>
 
             {/* Current Technical Skills by Category */}
-            <div>
-                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Code size={20} className="text-blue-600" />
-                    Current Technical Skills
-                </h4>
-                <div className="space-y-4">
-                    {Object.entries(current.technical).map(([category, skills], idx) => (
-                        <motion.div
-                            key={category}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + idx * 0.1 }}
-                        >
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xl">{categoryIcons[category] || '📌'}</span>
-                                <span className="font-medium text-gray-700 capitalize">{category}</span>
-                                <span className="text-sm text-gray-500">({skills.length})</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {skills.map((skill, skillIdx) => (
-                                    <motion.span
-                                        key={skillIdx}
-                                        initial={{ opacity: 0, scale: 0 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.3 + idx * 0.1 + skillIdx * 0.05 }}
-                                        className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium hover:bg-blue-200 transition"
-                                    >
-                                        {skill}
-                                    </motion.span>
-                                ))}
-                            </div>
-                        </motion.div>
-                    ))}
+            {current.technical && Object.keys(current.technical).length > 0 && (
+                <div>
+                    <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Code size={20} className="text-blue-600" />
+                        Current Technical Skills
+                    </h4>
+                    <div className="space-y-4">
+                        {Object.entries(current.technical).map(([category, skills], idx) => (
+                            <motion.div
+                                key={category}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 + idx * 0.1 }}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xl">{categoryIcons[category] || '📌'}</span>
+                                    <span className="font-medium text-gray-700 capitalize">{category}</span>
+                                    <span className="text-sm text-gray-500">({skills.length})</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {skills.map((skill, skillIdx) => (
+                                        <motion.span
+                                            key={skillIdx}
+                                            initial={{ opacity: 0, scale: 0 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.3 + idx * 0.1 + skillIdx * 0.05 }}
+                                            className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium hover:bg-blue-200 transition"
+                                        >
+                                            {skill}
+                                        </motion.span>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Current Soft Skills */}
             {current.soft && current.soft.length > 0 && (

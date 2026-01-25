@@ -6,7 +6,12 @@ import { MapPin, Clock, BookOpen, ExternalLink, Award, Target } from 'lucide-rea
 export default function LearningRoadmap({ roadmapData }) {
     if (!roadmapData) return null
 
-    const { items, phases, total_time, role } = roadmapData
+    const {
+        items = [],
+        phases = [],
+        total_time = 'Not specified',
+        role = 'Professional'
+    } = roadmapData
 
     const priorityColors = {
         'High': 'bg-red-100 text-red-700 border-red-300',

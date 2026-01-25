@@ -8,13 +8,13 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url)
 
     const authHeader = req.headers.get('authorization')
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return NextResponse.json(
-            { success: false, error: 'Unauthorized - No token provided' },
-            { status: 401 }
-          )
-        }
-    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - No token provided' },
+        { status: 401 }
+      )
+    }
+
     const token = authHeader.split('Bearer ')[1]
     const decoded = await adminAuth.verifyIdToken(token)
     const userId = decoded.uid
@@ -25,9 +25,9 @@ export async function GET(req) {
 
     let resumes = snapshot.exists()
       ? Object.entries(snapshot.val()).map(([id, value]) => ({
-          id,
-          ...value.meta,
-        }))
+        id,
+        ...value.meta,
+      }))
       : []
 
     // newest first
@@ -74,7 +74,7 @@ export async function POST(req) {
     const token = authHeader.split('Bearer ')[1]
     const decoded = await adminAuth.verifyIdToken(token)
     const userId = decoded.uid
-    
+
 
     const resumeId = uuidv4()
     const createdAt = new Date().toISOString()
@@ -88,10 +88,13 @@ export async function POST(req) {
         createdAt,
       },
       analysis: {
-        aiAnalysis: body.aiAnalysis || {},
-        skills: body.skills || [],
-        roadmap: body.roadmap || [],
+        aiAnalysis: body.ai_analysis || body.aiAnalysis || {},
+        atsScore: body.ats_score || body.atsScore || {},
+        skills: body.skills || {},
+        roadmap: body.roadmap || {},
+        riskAnalysis: body.risk_analysis || body.riskAnalysis || {}, // NEW
       },
+      extraction: body.extraction || {},
     }
 
     await rtdb.ref(`resumes/${userId}/${resumeId}`).set(resumeData)

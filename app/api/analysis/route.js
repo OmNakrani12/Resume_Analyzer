@@ -7,6 +7,7 @@ import AIAnalyzer from '@/lib/services/aiAnalyzer';
 import SkillExtractor from '@/lib/services/skillExtractor';
 import ATSScorer from '@/lib/services/atsScorer';
 import RoadmapGenerator from '@/lib/services/roadmapGenerator';
+import { analyzeRisk } from '@/lib/services/riskAnalyzer';
 
 /**
  * POST /api/analysis - Analyze resume
@@ -93,6 +94,12 @@ export async function POST(req) {
       skillAnalysis.detected_role
     );
 
+    // Step 6: Analyze risk (NEW)
+    const riskAnalysis = await analyzeRisk(resumeText, {
+      skills: skillAnalysis,
+      atsScore: atsResult
+    });
+
     // Clean up uploaded file
     if (filePath) {
       try {
@@ -128,6 +135,7 @@ export async function POST(req) {
           phases: roadmapResult.phases,
           total_time: roadmapResult.total_estimated_time,
         },
+        risk_analysis: riskAnalysis, // NEW
       },
     };
 

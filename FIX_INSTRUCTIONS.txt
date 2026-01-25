@@ -1,0 +1,22 @@
+// Fix script - remove duplicate AnimatePresence tag
+// Line 336 should be removed (duplicate </AnimatePresence>)
+// Line 338 should be changed from </div > to </div>
+
+// After fix, the end of the file should look like:
+/*
+                    {activeTab === 'risk' && (
+                        <motion.div
+                            key="risk"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                        >
+                            <RiskAnalysis riskData={resumeData.analysis?.riskAnalysis || riskAnalysis} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    )
+}
+*/

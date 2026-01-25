@@ -2,13 +2,27 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, AlertCircle, TrendingUp, Brain, Target, Map, Download } from 'lucide-react'
+import { CheckCircle, AlertCircle, TrendingUp, Brain, Target, Map, Download, Loader2 } from 'lucide-react'
 import ATSScoreCard from './ATSScoreCard'
 import SkillsMatrix from './SkillsMatrix'
 import LearningRoadmap from './LearningRoadmap'
+import { generateAnalysisPDF } from '@/lib/utils/pdfGenerator'
 
-export default function AnalysisResults({ result }) {
+export default function AnalysisResults({ result, fileName = 'Resume' }) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownloadPDF = async () => {
+    try {
+      setDownloading(true)
+      generateAnalysisPDF(result, fileName)
+    } catch (error) {
+      console.error('PDF generation error:', error)
+      alert('Failed to generate PDF. Please try again.')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   if (!result) return null
 
@@ -36,8 +50,8 @@ export default function AnalysisResults({ result }) {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition whitespace-nowrap ${activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100'
                   }`}
               >
                 <Icon size={18} />
@@ -237,10 +251,21 @@ export default function AnalysisResults({ result }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition shadow-lg"
+        onClick={handleDownloadPDF}
+        disabled={downloading}
+        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition shadow-lg"
       >
-        <Download size={20} />
-        Download Full Analysis Report
+        {downloading ? (
+          <>
+            <Loader2 className="animate-spin" size={20} />
+            Generating PDF...
+          </>
+        ) : (
+          <>
+            <Download size={20} />
+            Download Full Analysis Report (PDF)
+          </>
+        )}
       </motion.button>
     </div>
   )
