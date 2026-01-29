@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -10,8 +10,6 @@ import { auth, googleProvider } from '@/app/firebase/config'
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
 } from 'firebase/auth'
 
 export default function SignUp() {
@@ -35,40 +33,6 @@ export default function SignUp() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // 🔁 GOOGLE REDIRECT RESULT (ONLY FOR PROD)
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) return
-
-        const user = result.user
-        const token = await user.getIdToken(true)
-
-        await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token,
-            fullName: user.displayName || 'Google User',
-          }),
-        })
-
-        localStorage.setItem('token', token)
-        localStorage.setItem(
-          'user',
-          JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            name: user.displayName,
-            photo: user.photoURL,
-          })
-        )
-
-        router.replace('/dashboard')
-      })
-      .catch(() => setError('Google sign up failed'))
-      .finally(() => setLoading(false))
-  }, [router])
 
   // 📧 EMAIL SIGN UP
   const handleSubmit = async (e) => {
@@ -131,39 +95,31 @@ export default function SignUp() {
     setLoading(true)
 
     try {
-      const isLocal =
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1'
+      const result = await signInWithPopup(auth, googleProvider)
+      const user = result.user
+      const token = await user.getIdToken(true)
 
-      if (isLocal) {
-        const result = await signInWithPopup(auth, googleProvider)
-        const user = result.user
-        const token = await user.getIdToken(true)
+      await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          fullName: user.displayName || 'Google User',
+        }),
+      })
 
-        await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token,
-            fullName: user.displayName || 'Google User',
-          }),
+      localStorage.setItem('token', token)
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName,
+          photo: user.photoURL,
         })
+      )
 
-        localStorage.setItem('token', token)
-        localStorage.setItem(
-          'user',
-          JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            name: user.displayName,
-            photo: user.photoURL,
-          })
-        )
-
-        router.replace('/dashboard')
-      } else {
-        await signInWithRedirect(auth, googleProvider)
-      }
+      router.replace('/dashboard')
     } catch (err) {
       console.error(err)
       setError('Google sign up failed')
