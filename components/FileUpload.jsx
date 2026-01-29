@@ -98,7 +98,6 @@ export default function FileUpload({ onAnalysis }) {
 
       // Parse JSON response
       const result = await response.json()
-      console.log('Analysis result:', result)
       if (result.success && result.data) {
         // Add file metadata to the analysis data
         const dataToSave = {
@@ -107,7 +106,6 @@ export default function FileUpload({ onAnalysis }) {
           fileSize: file.size,
         }
         await resumeAPI.saveAnalysis(dataToSave, result);
-        console.log("After Analysis Save:", dataToSave);
         onAnalysis(result.data)
       } else {
         throw new Error('Invalid response from server')

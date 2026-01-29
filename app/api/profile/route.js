@@ -47,7 +47,6 @@ export async function GET(req) {
         bio: '',
         jobTitle: '',
       }
-      console.log('USER PROFILE:', userProfile)
     return NextResponse.json(
       {
         success: true,

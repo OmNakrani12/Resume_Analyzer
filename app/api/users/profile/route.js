@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/firebase/admin"
+import { rtdb } from "@/app/firebase/admin"
 
 /**
  * GET /api/profile?userId=xxx
@@ -16,19 +16,19 @@ export async function GET(req) {
       )
     }
 
-    const ref = db.ref(`users/${userId}/profile`)
+    const ref = rtdb.ref(`users/${userId}/profile`)
     const snapshot = await ref.get()
 
     const data = snapshot.exists()
       ? snapshot.val()
       : {
-          fullName: "",
-          email: "",
-          phone: "",
-          location: "",
-          bio: "",
-          jobTitle: ""
-        }
+        fullName: "",
+        email: "",
+        phone: "",
+        location: "",
+        bio: "",
+        jobTitle: ""
+      }
 
     // Auto-create profile if missing
     if (!snapshot.exists()) {
@@ -64,7 +64,7 @@ export async function PUT(req) {
       )
     }
 
-    const ref = db.ref(`users/${userId}/profile`)
+    const ref = rtdb.ref(`users/${userId}/profile`)
 
     await ref.update({
       fullName: profile.fullName || "",

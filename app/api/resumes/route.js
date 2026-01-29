@@ -20,7 +20,6 @@ export async function GET(req) {
     const userId = decoded.uid
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
-    console.log(userId);
     const snapshot = await rtdb.ref(`resumes/${userId}`).get()
 
     let resumes = snapshot.exists()
@@ -78,7 +77,6 @@ export async function POST(req) {
 
     const resumeId = uuidv4()
     const createdAt = new Date().toISOString()
-    console.log("Body : " + JSON.stringify(body));
     const resumeData = {
       meta: {
         fileName: body.fileName || 'resume.pdf',

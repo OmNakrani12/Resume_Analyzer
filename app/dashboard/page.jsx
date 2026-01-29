@@ -46,17 +46,16 @@ export default function Dashboard() {
         const resumesList = resumesResponse?.data?.data?.resumes || []
 
         setResumes(resumesList)
-        console.log('Fetched resumes:', resumesList.ai_analysis ? resumesList.ai_analysis : resumesList);
         // Calculate stats
         const avgScore =
           resumesList.length > 0
             ? Math.round(
-                resumesList.reduce(
-                  (sum, r) =>
-                    sum + Number(r.overallScore ?? r.atsScore ?? 0),
-                  0
-                ) / resumesList.length
-              )
+              resumesList.reduce(
+                (sum, r) =>
+                  sum + Number(r.overallScore ?? r.atsScore ?? 0),
+                0
+              ) / resumesList.length
+            )
             : 0
 
 
@@ -263,7 +262,7 @@ export default function Dashboard() {
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${resume.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
                           }`}>
                           {(resume.status || 'completed').charAt(0).toUpperCase() +
-                          (resume.status || 'completed').slice(1)}
+                            (resume.status || 'completed').slice(1)}
                         </span>
                       </td>
                       <td className="py-4 px-4">

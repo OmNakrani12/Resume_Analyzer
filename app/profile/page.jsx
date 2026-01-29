@@ -36,10 +36,8 @@ export default function ProfilePage() {
         const storedUser = JSON.parse(userStr)
         setUser(storedUser)
         const userId = storedUser?.uid || 'default_user'
-        console.log('Fetching profile for userId:', userId);
         const response = await userAPI.getProfile(userId)
         const profileData = response?.data?.data || {}
-        console.log('Fetched profile data:', profileData);
         setProfile({
           fullName: profileData.fullName || storedUser.displayName || '',
           email: profileData.email || storedUser.email || '',
@@ -197,8 +195,8 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                      ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
                     }`}
                   placeholder="Enter your full name"
                 />
@@ -217,8 +215,8 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                      ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
                     }`}
                   placeholder="your.email@example.com"
                 />
@@ -237,8 +235,8 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                      ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
                     }`}
                   placeholder="+1 (555) 123-4567"
                 />
@@ -257,8 +255,8 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                      ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
                     }`}
                   placeholder="City, Country"
                 />
@@ -277,8 +275,8 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                      ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
                     }`}
                   placeholder="e.g., Software Engineer"
                 />
@@ -297,8 +295,8 @@ export default function ProfilePage() {
                   disabled={!isEditing}
                   rows={4}
                   className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                      ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
                     }`}
                   placeholder="Tell us about yourself..."
                 />
