@@ -1,24 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
-import { auth, googleProvider } from "@/app/firebase/config"
+import { Eye, EyeOff } from 'lucide-react'
+
+import { auth, googleProvider } from '@/app/firebase/config'
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
-} from "firebase/auth"
+  signInWithRedirect,
+  getRedirectResult,
+} from 'firebase/auth'
 
 export default function SignUp() {
   const router = useRouter()
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
   })
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
@@ -27,29 +32,68 @@ export default function SignUp() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // ✅ EMAIL SIGN UP
+  // 🔁 HANDLE GOOGLE REDIRECT RESULT (PRODUCTION)
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (!result) return
+
+        const user = result.user
+        const token = await user.getIdToken(true)
+
+        await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            fullName: user.displayName || 'Google User',
+          }),
+        })
+
+        localStorage.setItem('token', token)
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName,
+            photo: user.photoURL,
+          })
+        )
+
+        router.push('/dashboard')
+      })
+      .catch((err) => {
+        console.error(err)
+        setError('Google sign up failed')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
+
+  // 📧 EMAIL SIGN UP
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      if (!Object.values(formData).every(v => v)) {
-        throw new Error("Please fill in all fields")
+      if (!Object.values(formData).every((v) => v)) {
+        throw new Error('Please fill in all fields')
       }
 
       if (formData.password !== formData.confirmPassword) {
-        throw new Error("Passwords do not match")
+        throw new Error('Passwords do not match')
       }
 
       if (!agreedToTerms) {
-        throw new Error("Please agree to the terms")
+        throw new Error('Please agree to the terms')
       }
 
-      // 1️⃣ Firebase Auth
       const cred = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -57,32 +101,29 @@ export default function SignUp() {
       )
 
       const user = cred.user
-
-      // 2️⃣ Token
       const token = await user.getIdToken(true)
 
-      // 3️⃣ Backend register
-      await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
           fullName: formData.fullName,
         }),
       })
 
-      // 4️⃣ Store auth
-      localStorage.setItem("token", token)
-      localStorage.setItem("user", JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-      }))
+      localStorage.setItem('token', token)
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+        })
+      )
 
-      // 5️⃣ Redirect
-      router.push("/dashboard")
-
+      router.push('/dashboard')
     } catch (err) {
-      setError(err.message || "Sign up failed")
+      setError(err.message || 'Sign up failed')
     } finally {
       setLoading(false)
     }
@@ -94,33 +135,40 @@ export default function SignUp() {
     setLoading(true)
 
     try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const user = result.user
-      const token = await user.getIdToken(true)
+      if (window.location.hostname === 'localhost') {
+        // Popup for local dev
+        const result = await signInWithPopup(auth, googleProvider)
+        const user = result.user
+        const token = await user.getIdToken(true)
 
-      // Backend register (Google users too)
-      await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          fullName: user.displayName || "Google User",
-        }),
-      })
+        await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            fullName: user.displayName || 'Google User',
+          }),
+        })
 
-      localStorage.setItem("token", token)
-      localStorage.setItem("user", JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photo: user.photoURL,
-      }))
+        localStorage.setItem('token', token)
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName,
+            photo: user.photoURL,
+          })
+        )
 
-      router.push("/dashboard")
+        router.push('/dashboard')
+      } else {
+        // Redirect for production
+        await signInWithRedirect(auth, googleProvider)
+      }
     } catch (err) {
       console.error(err)
-      setError("Google sign up failed")
-    } finally {
+      setError('Google sign up failed')
       setLoading(false)
     }
   }
@@ -128,8 +176,9 @@ export default function SignUp() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center px-4 py-12">
       <motion.div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-
-        <h1 className="text-3xl font-bold text-center mb-6">Create Account</h1>
+        <h1 className="text-3xl font-bold text-center mb-6">
+          Create Account
+        </h1>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -160,7 +209,7 @@ export default function SignUp() {
 
           <input
             name="password"
-            type={showPassword ? "text" : "password"}
+            type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
@@ -170,7 +219,7 @@ export default function SignUp() {
 
           <input
             name="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
+            type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Confirm Password"
             value={formData.confirmPassword}
             onChange={handleChange}
@@ -191,7 +240,7 @@ export default function SignUp() {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3 rounded font-semibold"
           >
-            {loading ? "Creating account..." : "Create Account"}
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 

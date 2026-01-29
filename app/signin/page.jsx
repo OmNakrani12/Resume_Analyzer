@@ -1,73 +1,107 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
-import { auth, googleProvider } from "@/app/firebase/config"
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+
+import { auth, googleProvider } from '@/app/firebase/config'
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
+} from 'firebase/auth'
 
 export default function SignIn() {
   const router = useRouter()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // ✅ EMAIL LOGIN (UNCHANGED)
+  // ✅ COMMON LOGIN HANDLER
+  const finishLogin = async (user) => {
+    const token = await user.getIdToken(true)
+
+    localStorage.setItem('token', token)
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        photo: user.photoURL
+      })
+    )
+
+    router.push('/dashboard')
+  }
+
+  // 🔁 HANDLE GOOGLE REDIRECT RESULT (PRODUCTION)
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (!result) return
+        await finishLogin(result.user)
+      })
+      .catch((err) => {
+        console.error(err)
+        setError('Google login failed')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
+
+  // 📧 EMAIL LOGIN
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      const user = userCredential.user
-
-      const token = await user.getIdToken(true)
-
-      localStorage.setItem("token", token)
-      localStorage.setItem("user", JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-      }))
-
-      router.push("/dashboard")
-    } catch (error) {
-      setError(error.message || "Sign in failed")
-    } finally {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      )
+      await finishLogin(userCredential.user)
+    } catch (err) {
+      setError(err.message || 'Sign in failed')
       setLoading(false)
     }
   }
 
-  // ✅ GOOGLE LOGIN (NEW)
+  // 🔵 GOOGLE LOGIN
   const handleGoogleLogin = async () => {
     setError('')
     setLoading(true)
 
     try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const user = result.user
-      const token = await user.getIdToken(true)
+      const hostname = window.location.hostname
+      const isLocal =
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1'
 
-      localStorage.setItem("token", token)
-      localStorage.setItem("user", JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photo: user.photoURL,
-      }))
-
-      router.push("/dashboard")
+      if (isLocal) {
+        // ✅ Popup for local dev
+        const result = await signInWithPopup(auth, googleProvider)
+        await finishLogin(result.user)
+      } else {
+        // ✅ Redirect for production
+        await signInWithRedirect(auth, googleProvider)
+      }
     } catch (err) {
       console.error(err)
-      setError("Google login failed")
-    } finally {
+      setError('Google login failed')
       setLoading(false)
     }
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center px-4 py-12">
@@ -76,8 +110,9 @@ export default function SignIn() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md"
       >
-
-        <h1 className="text-3xl font-bold text-center mb-6">Welcome Back</h1>
+        <h1 className="text-3xl font-bold text-center mb-6">
+          Welcome Back
+        </h1>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -123,7 +158,7 @@ export default function SignIn() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
@@ -134,7 +169,7 @@ export default function SignIn() {
           <div className="flex-1 h-px bg-gray-300" />
         </div>
 
-        {/* 🔵 GOOGLE LOGIN BUTTON */}
+        {/* GOOGLE LOGIN */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}

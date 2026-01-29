@@ -1,4 +1,3 @@
-// app/firebase/config.js
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getDatabase } from "firebase/database";
@@ -11,11 +10,14 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_MESSAGINGSENDERID,
   appId: process.env.NEXT_PUBLIC_APPID,
   databaseURL: process.env.NEXT_PUBLIC_DATABASEURL,
-  measurementId: process.env.NEXT_PUBLIC_MEASUREMENTID,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const rtdb = getDatabase(app);
+
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: "select_account",
+});
