@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -11,7 +11,6 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
-  getRedirectResult
 } from 'firebase/auth'
 
 export default function SignIn() {
@@ -23,7 +22,6 @@ export default function SignIn() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // ✅ COMMON LOGIN HANDLER
   const finishLogin = async (user) => {
     const token = await user.getIdToken(true)
 
@@ -34,28 +32,12 @@ export default function SignIn() {
         uid: user.uid,
         email: user.email,
         name: user.displayName,
-        photo: user.photoURL
+        photo: user.photoURL,
       })
     )
 
-    router.push('/dashboard')
+    router.replace('/dashboard')
   }
-
-  // 🔁 HANDLE GOOGLE REDIRECT RESULT (PRODUCTION)
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) return
-        await finishLogin(result.user)
-      })
-      .catch((err) => {
-        console.error(err)
-        setError('Google login failed')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [])
 
   // 📧 EMAIL LOGIN
   const handleSubmit = async (e) => {
@@ -64,14 +46,11 @@ export default function SignIn() {
     setLoading(true)
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      )
-      await finishLogin(userCredential.user)
+      const cred = await signInWithEmailAndPassword(auth, email, password)
+      await finishLogin(cred.user)
     } catch (err) {
       setError(err.message || 'Sign in failed')
+    } finally {
       setLoading(false)
     }
   }
@@ -82,17 +61,14 @@ export default function SignIn() {
     setLoading(true)
 
     try {
-      const hostname = window.location.hostname
       const isLocal =
-        hostname === 'localhost' ||
-        hostname === '127.0.0.1'
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
 
       if (isLocal) {
-        // ✅ Popup for local dev
         const result = await signInWithPopup(auth, googleProvider)
         await finishLogin(result.user)
       } else {
-        // ✅ Redirect for production
         await signInWithRedirect(auth, googleProvider)
       }
     } catch (err) {
@@ -102,17 +78,10 @@ export default function SignIn() {
     }
   }
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md"
-      >
-        <h1 className="text-3xl font-bold text-center mb-6">
-          Welcome Back
-        </h1>
+      <motion.div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center mb-6">Welcome Back</h1>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -120,71 +89,45 @@ export default function SignIn() {
           </div>
         )}
 
-        {/* EMAIL LOGIN */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg"
-              placeholder="Email"
-              required
-            />
-          </div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+            placeholder="Email"
+            required
+          />
 
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 border rounded-lg"
-              placeholder="Password"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-gray-400"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+            placeholder="Password"
+            required
+          />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
+            className="w-full bg-blue-600 text-white py-3 rounded font-semibold"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        {/* DIVIDER */}
-        <div className="my-6 flex items-center gap-4">
-          <div className="flex-1 h-px bg-gray-300" />
-          <span className="text-gray-500 text-sm">OR</span>
-          <div className="flex-1 h-px bg-gray-300" />
-        </div>
+        <div className="my-6 text-center text-gray-500">OR</div>
 
-        {/* GOOGLE LOGIN */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 border py-3 rounded-lg hover:bg-gray-50"
+          className="w-full border py-3 rounded hover:bg-gray-50"
         >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="Google"
-            className="w-5 h-5"
-          />
           Continue with Google
         </button>
 
-        {/* SIGN UP */}
-        <p className="text-center text-gray-600 mt-6">
+        <p className="text-center mt-6">
           Don’t have an account?{' '}
           <Link href="/signup" className="text-blue-600 font-semibold">
             Sign up

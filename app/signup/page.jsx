@@ -35,7 +35,7 @@ export default function SignUp() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // 🔁 HANDLE GOOGLE REDIRECT RESULT (PRODUCTION)
+  // 🔁 GOOGLE REDIRECT RESULT (ONLY FOR PROD)
   useEffect(() => {
     getRedirectResult(auth)
       .then(async (result) => {
@@ -64,16 +64,11 @@ export default function SignUp() {
           })
         )
 
-        router.push('/dashboard')
+        router.replace('/dashboard')
       })
-      .catch((err) => {
-        console.error(err)
-        setError('Google sign up failed')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [])
+      .catch(() => setError('Google sign up failed'))
+      .finally(() => setLoading(false))
+  }, [router])
 
   // 📧 EMAIL SIGN UP
   const handleSubmit = async (e) => {
@@ -82,7 +77,7 @@ export default function SignUp() {
     setLoading(true)
 
     try {
-      if (!Object.values(formData).every((v) => v)) {
+      if (!Object.values(formData).every(Boolean)) {
         throw new Error('Please fill in all fields')
       }
 
@@ -118,10 +113,11 @@ export default function SignUp() {
         JSON.stringify({
           uid: user.uid,
           email: user.email,
+          name: formData.fullName,
         })
       )
 
-      router.push('/dashboard')
+      router.replace('/dashboard')
     } catch (err) {
       setError(err.message || 'Sign up failed')
     } finally {
@@ -135,8 +131,11 @@ export default function SignUp() {
     setLoading(true)
 
     try {
-      if (window.location.hostname === 'localhost') {
-        // Popup for local dev
+      const isLocal =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
+
+      if (isLocal) {
         const result = await signInWithPopup(auth, googleProvider)
         const user = result.user
         const token = await user.getIdToken(true)
@@ -161,9 +160,8 @@ export default function SignUp() {
           })
         )
 
-        router.push('/dashboard')
+        router.replace('/dashboard')
       } else {
-        // Redirect for production
         await signInWithRedirect(auth, googleProvider)
       }
     } catch (err) {
@@ -176,9 +174,7 @@ export default function SignUp() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center px-4 py-12">
       <motion.div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6">
-          Create Account
-        </h1>
+        <h1 className="text-3xl font-bold text-center mb-6">Create Account</h1>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -186,7 +182,6 @@ export default function SignUp() {
           </div>
         )}
 
-        {/* EMAIL SIGN UP */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             name="fullName"
@@ -194,7 +189,6 @@ export default function SignUp() {
             value={formData.fullName}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded"
-            required
           />
 
           <input
@@ -204,7 +198,6 @@ export default function SignUp() {
             value={formData.email}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded"
-            required
           />
 
           <input
@@ -214,7 +207,6 @@ export default function SignUp() {
             value={formData.password}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded"
-            required
           />
 
           <input
@@ -224,7 +216,6 @@ export default function SignUp() {
             value={formData.confirmPassword}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded"
-            required
           />
 
           <label className="flex items-center gap-2 text-sm">
@@ -244,14 +235,8 @@ export default function SignUp() {
           </button>
         </form>
 
-        {/* DIVIDER */}
-        <div className="my-6 flex items-center gap-4">
-          <div className="flex-1 h-px bg-gray-300" />
-          <span className="text-gray-500 text-sm">OR</span>
-          <div className="flex-1 h-px bg-gray-300" />
-        </div>
+        <div className="my-6 text-center text-gray-500">OR</div>
 
-        {/* GOOGLE SIGN UP */}
         <button
           onClick={handleGoogleSignup}
           disabled={loading}
