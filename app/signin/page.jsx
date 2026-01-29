@@ -10,7 +10,6 @@ import { auth, googleProvider } from '@/app/firebase/config'
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
 } from 'firebase/auth'
 
 export default function SignIn() {
@@ -61,16 +60,8 @@ export default function SignIn() {
     setLoading(true)
 
     try {
-      const isLocal =
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1'
-
-      if (isLocal) {
-        const result = await signInWithPopup(auth, googleProvider)
-        await finishLogin(result.user)
-      } else {
-        await signInWithRedirect(auth, googleProvider)
-      }
+      const result = await signInWithPopup(auth, googleProvider)
+      await finishLogin(result.user)
     } catch (err) {
       console.error(err)
       setError('Google login failed')
