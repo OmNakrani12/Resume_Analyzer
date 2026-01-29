@@ -38,7 +38,7 @@ export default function AnalyzePage() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="bg-white rounded-lg shadow-lg p-8"
+              className="bg-white rounded-lg sha dow-lg p-8"
             >
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">Analysis Results</h2>
               <AnalysisResults result={analysisResult} />

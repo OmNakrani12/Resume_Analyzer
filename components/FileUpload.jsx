@@ -106,7 +106,7 @@ export default function FileUpload({ onAnalysis }) {
           fileName: file.name,
           fileSize: file.size,
         }
-        await resumeAPI.saveAnalysis(dataToSave);
+        await resumeAPI.saveAnalysis(dataToSave, result);
         console.log("After Analysis Save:", dataToSave);
         onAnalysis(result.data)
       } else {

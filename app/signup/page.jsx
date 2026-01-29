@@ -126,7 +126,7 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-600 to-emerald-700 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center px-4 py-12">
       <motion.div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
 
         <h1 className="text-3xl font-bold text-center mb-6">Create Account</h1>
@@ -189,7 +189,7 @@ export default function SignUp() {
 
           <button
             disabled={loading}
-            className="w-full bg-green-600 text-white py-3 rounded font-semibold"
+            className="w-full bg-blue-600 text-white py-3 rounded font-semibold"
           >
             {loading ? "Creating account..." : "Create Account"}
           </button>
@@ -217,7 +217,7 @@ export default function SignUp() {
 
         <p className="text-center mt-6">
           Already have an account?{' '}
-          <Link href="/signin" className="text-green-600 font-semibold">
+          <Link href="/signin" className="text-blue-600 font-semibold">
             Sign in
           </Link>
         </p>

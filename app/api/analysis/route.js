@@ -9,10 +9,7 @@ import ATSScorer from '@/lib/services/atsScorer';
 import RoadmapGenerator from '@/lib/services/roadmapGenerator';
 import { analyzeRisk } from '@/lib/services/riskAnalyzer';
 
-/**
- * POST /api/analysis - Analyze resume
- * Complete AI-powered resume analysis
- */
+
 export async function POST(req) {
   let filePath = null;
 
@@ -81,20 +78,16 @@ export async function POST(req) {
     // Step 2: Extract skills
     const skillAnalysis = SkillExtractor.analyzeSkills(resumeText);
 
-    // Step 3: Calculate ATS score
     const atsResult = ATSScorer.calculateAtsScore(resumeText, skillAnalysis);
 
-    // Step 4: AI-powered analysis
     const aiAnalyzer = new AIAnalyzer();
     const aiResult = await aiAnalyzer.analyzeResume(resumeText);
 
-    // Step 5: Generate learning roadmap
     const roadmapResult = RoadmapGenerator.generateRoadmap(
       skillAnalysis.suggested_skills,
       skillAnalysis.detected_role
     );
-
-    // Step 6: Analyze risk (NEW)
+    
     const riskAnalysis = await analyzeRisk(resumeText, {
       skills: skillAnalysis,
       atsScore: atsResult
@@ -113,6 +106,7 @@ export async function POST(req) {
     const response = {
       success: true,
       data: {
+        resume_text : resumeText,
         extraction: {
           word_count: extractionResult.word_count,
           char_count: extractionResult.char_count,
