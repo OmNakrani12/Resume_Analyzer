@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-primary: #6366f1;
+  --color-secondary: #a855f7;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.05);
+  --nav-bg: rgba(255, 255, 255, 0.6);
+  --text-muted: #64748b;
+  --bg-glow: rgba(99, 102, 241, 0.05);
+}
+
+.dark {
+  --card-bg: rgba(8, 12, 23, 0.6);
+  --card-border: rgba(255, 255, 255, 0.05);
+  --nav-bg: rgba(8, 12, 23, 0.4);
+  --text-muted: #94a3b8;
+  --bg-glow: rgba(99, 102, 241, 0.08);
 }
 
 body {
-  background: var(--background);
-  color: black;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+@layer utilities {
+  .quantum-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--card-border);
+    transition: all 0.3s ease;
+  }
+
+  .quantum-nav {
+    background: var(--nav-bg);
+    backdrop-filter: blur(32px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Compact spacing utilities */
+  .p-tight { padding: 1.25rem; }
+  .p-v-tight { padding: 1.5rem 2rem; }
+  .gap-tight { gap: 1rem; }
+}
+
+/* Animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s infinite ease-in-out;
 }

@@ -172,11 +172,10 @@ export default function ResumeViewPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                  activeTab === tab.id
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${activeTab === tab.id
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <Icon size={18} />
                 {tab.label}
@@ -227,7 +226,7 @@ export default function ResumeViewPage() {
           {/* ATS */}
           {activeTab === 'ats' && (
             <motion.div key="ats" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <ATSScoreCard atsData={{ overall_score: atsScore,  }} />
+              <ATSScoreCard atsData={{ overall_score: atsScore, }} />
             </motion.div>
           )}
 

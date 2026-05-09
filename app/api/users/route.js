@@ -1,71 +1,100 @@
-import { NextResponse } from 'next/server';
-import dataStore from '@/lib/storage/dataStore';
+import { NextResponse } from "next/server";
+import { adminAuth, rtdb } from "@/app/firebase/admin";
 
-/**
- * GET /api/users - Get user profile
- */
-export async function GET(req) {
+/* =========================
+   PATCH → Partial Update
+========================= */
+export async function PATCH(req) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || req.headers.get('X-User-ID') || 'default_user';
+    const { token, fullName, plan, role } = await req.json();
 
-    const user = dataStore.getUser(userId);
+    if (!token) {
+      return NextResponse.json(
+        { error: "Missing token" },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: user,
-      },
-      { status: 200 }
-    );
-  } catch (err) {
-    console.error('GET USER PROFILE ERROR:', err);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+    // 🔐 Verify Firebase ID token
+    const decoded = await adminAuth.verifyIdToken(token);
+    const uid = decoded.uid;
 
-/**
- * POST /api/users - Update user profile
- */
-export async function POST(req) {
-  try {
-    const body = await req.json();
-    const userId = body.userId || req.headers.get('X-User-ID') || 'default_user';
-
-    const userData = {
-      name: body.fullName || body.name || '',
-      email: body.email || '',
-      phone: body.phone || '',
-      location: body.location || '',
-      bio: body.bio || '',
-      jobTitle: body.jobTitle || '',
+    // 🧠 Build update object dynamically
+    const updates = {
+      updatedAt: Date.now(),
     };
 
-    const updated = dataStore.saveUser(userId, userData);
+    if (fullName) updates.fullName = fullName;
+    if (plan) updates.plan = plan;
+    if (role) updates.role = role;
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Profile updated successfully',
-        data: updated,
-      },
-      { status: 200 }
-    );
+    // 🚫 Prevent empty updates
+    if (Object.keys(updates).length === 1) {
+      return NextResponse.json(
+        { error: "No valid fields to update" },
+        { status: 400 }
+      );
+    }
+
+    // 🗄️ Partial update (PATCH behavior)
+    await rtdb.ref(`users/${uid}`).update(updates);
+
+    return NextResponse.json({
+      success: true,
+      message: "User updated successfully",
+      updates,
+    });
+
   } catch (err) {
-    console.error('UPDATE USER PROFILE ERROR:', err);
+    console.error("PATCH USER ERROR:", err);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { error: err.message },
+      { status: 401 }
     );
   }
 }
 
-/**
- * PUT /api/users - Alternative update method
- */
-export async function PUT(req) {
-  return POST(req);
+/* =========================
+   GET → Fetch User Profile
+========================= */
+export async function GET(req) {
+  try {
+    // 🔐 Read token from Authorization header
+    const authHeader = req.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+
+    // 🔎 Verify Firebase ID token
+    const decoded = await adminAuth.verifyIdToken(token);
+    const uid = decoded.uid;
+
+    // 📦 Fetch user profile
+    const snapshot = await rtdb.ref(`users/${uid}`).get();
+
+    if (!snapshot.exists()) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: snapshot.val(),
+    });
+
+  } catch (err) {
+    console.error("GET USER ERROR:", err);
+    return NextResponse.json(
+      { error: err.message },
+      { status: 401 }
+    );
+  }
 }

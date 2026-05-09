@@ -4,41 +4,20 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
-
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Github } from 'lucide-react'
 import { auth, googleProvider } from '@/app/firebase/config'
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup,
-} from 'firebase/auth'
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
+import Cookies from 'js-cookie'
+import AuthLayout from '@/components/AuthLayout'
 
 export default function SignIn() {
   const router = useRouter()
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const finishLogin = async (user) => {
-    const token = await user.getIdToken(true)
-
-    localStorage.setItem('token', token)
-    localStorage.setItem(
-      'user',
-      JSON.stringify({
-        uid: user.uid,
-        email: user.email,
-        name: user.displayName,
-        photo: user.photoURL,
-      })
-    )
-
-    router.replace('/dashboard')
-  }
-
-  // 📧 EMAIL LOGIN
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -46,85 +25,122 @@ export default function SignIn() {
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password)
-      await finishLogin(cred.user)
+      const token = await cred.user.getIdToken()
+      Cookies.set('token', token, { expires: 7 })
+      localStorage.setItem('user', JSON.stringify({
+        uid: cred.user.uid,
+        email: cred.user.email,
+        name: cred.user.displayName
+      }))
+      router.replace('/dashboard')
     } catch (err) {
-      setError(err.message || 'Sign in failed')
+      setError('Invalid email or password')
     } finally {
       setLoading(false)
     }
   }
 
-  // 🔵 GOOGLE LOGIN
   const handleGoogleLogin = async () => {
-    setError('')
     setLoading(true)
-
     try {
       const result = await signInWithPopup(auth, googleProvider)
-      await finishLogin(result.user)
+      const token = await result.user.getIdToken()
+      Cookies.set('token', token, { expires: 7 })
+      router.replace('/dashboard')
     } catch (err) {
-      console.error(err)
       setError('Google login failed')
+    } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center px-4 py-12">
-      <motion.div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6">Welcome Back</h1>
-
+    <AuthLayout title="Access Account" subtitle="Sign in to your professional dashboard">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-2xl text-sm font-medium">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-            placeholder="Email"
-            required
-          />
+        <div className="space-y-4">
+          <div className="relative group">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 text-white pl-12 pr-4 py-4 rounded-2xl outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+              placeholder="Email address"
+              required
+            />
+          </div>
 
-          <input
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-            placeholder="Password"
-            required
-          />
+          <div className="relative group">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 text-white pl-12 pr-12 py-4 rounded-2xl outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+              placeholder="Password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded font-semibold"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="my-6 text-center text-gray-500">OR</div>
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 rounded border-white/10 bg-white/5 text-indigo-600 focus:ring-indigo-500/20" />
+            <span className="text-sm text-slate-400 font-medium">Remember me</span>
+          </label>
+          <Link href="/forgot-password" size="sm" className="text-sm font-bold text-indigo-400 hover:text-indigo-300 transition">
+            Forgot Password?
+          </Link>
+        </div>
 
         <button
-          onClick={handleGoogleLogin}
+          type="submit"
           disabled={loading}
-          className="w-full border py-3 rounded hover:bg-gray-50"
+          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98]"
         >
-          Continue with Google
+          {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Sign In <ArrowRight size={20} /></>}
         </button>
 
-        <p className="text-center mt-6">
-          Don’t have an account?{' '}
-          <Link href="/signup" className="text-blue-600 font-semibold">
-            Sign up
-          </Link>
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+          <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-2 text-slate-500 font-bold tracking-widest">Or continue with</span></div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white py-3 rounded-2xl font-bold hover:bg-white/10 transition"
+          >
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" />
+            Google
+          </button>
+          <button
+            type="button"
+            className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white py-3 rounded-2xl font-bold hover:bg-white/10 transition"
+          >
+            <Github className="w-5 h-5" />
+            GitHub
+          </button>
+        </div>
+
+        <p className="text-center text-slate-500 font-medium mt-8">
+          Don't have an account? <Link href="/signup" className="text-white font-bold hover:underline">Register now</Link>
         </p>
-      </motion.div>
-    </div>
+      </form>
+    </AuthLayout>
   )
 }

@@ -52,6 +52,12 @@ export async function GET(req) {
     )
   } catch (error) {
     console.error('GET RESUMES ERROR:', error)
+    if (error.code?.startsWith('auth/')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Invalid or expired token' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to fetch resumes' },
       { status: 500 }
@@ -107,6 +113,12 @@ export async function POST(req) {
     )
   } catch (error) {
     console.error('SAVE RESUME ERROR:', error)
+    if (error.code?.startsWith('auth/')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Invalid or expired token' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to save resume' },
       { status: 500 }

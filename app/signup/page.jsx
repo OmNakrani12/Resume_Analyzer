@@ -4,214 +4,115 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff } from 'lucide-react'
-
-import { auth, googleProvider } from '@/app/firebase/config'
-import {
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-} from 'firebase/auth'
+import { Mail, Lock, User, CheckCircle, ArrowRight } from 'lucide-react'
+import { auth } from '@/app/firebase/config'
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth'
+import Cookies from 'js-cookie'
+import AuthLayout from '@/components/AuthLayout'
 
 export default function SignUp() {
   const router = useRouter()
-
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  })
-
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
-
-  // 📧 EMAIL SIGN UP
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      if (!Object.values(formData).every(Boolean)) {
-        throw new Error('Please fill in all fields')
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match')
-      }
-
-      if (!agreedToTerms) {
-        throw new Error('Please agree to the terms')
-      }
-
-      const cred = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      )
-
-      const user = cred.user
-      const token = await user.getIdToken(true)
-
-      await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          fullName: formData.fullName,
-        }),
-      })
-
-      localStorage.setItem('token', token)
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          name: formData.fullName,
-        })
-      )
-
-      router.replace('/dashboard')
+      const cred = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      await updateProfile(cred.user, { displayName: formData.fullName })
+      await sendEmailVerification(cred.user)
+      
+      const token = await cred.user.getIdToken()
+      Cookies.set('token', token, { expires: 7 })
+      
+      router.push('/verify-email')
     } catch (err) {
-      setError(err.message || 'Sign up failed')
+      setError(err.message || 'Registration failed')
     } finally {
       setLoading(false)
     }
   }
 
-  // 🔵 GOOGLE SIGN UP
-  const handleGoogleSignup = async () => {
-    setError('')
-    setLoading(true)
-
-    try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const user = result.user
-      const token = await user.getIdToken(true)
-
-      await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          fullName: user.displayName || 'Google User',
-        }),
-      })
-
-      localStorage.setItem('token', token)
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName,
-          photo: user.photoURL,
-        })
-      )
-
-      router.replace('/dashboard')
-    } catch (err) {
-      console.error(err)
-      setError('Google sign up failed')
-      setLoading(false)
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center px-4 py-12">
-      <motion.div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6">Create Account</h1>
-
+    <AuthLayout title="Join Community" subtitle="Create your professional AI identity">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-2xl text-sm font-medium">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            name="fullName"
-            placeholder="Full Name"
-            value={formData.fullName}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
-          />
-
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
-          />
-
-          <input
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
-          />
-
-          <input
-            name="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
-          />
-
-          <label className="flex items-center gap-2 text-sm">
+        <div className="space-y-4">
+          <div className="relative group">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
             <input
-              type="checkbox"
-              checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              name="fullName"
+              type="text"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="w-full bg-white/5 border border-white/10 text-white pl-12 pr-4 py-4 rounded-2xl outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+              placeholder="Full name"
+              required
             />
-            I agree to terms & privacy policy
-          </label>
+          </div>
 
-          <button
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded font-semibold"
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
-          </button>
-        </form>
+          <div className="relative group">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+            <input
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full bg-white/5 border border-white/10 text-white pl-12 pr-4 py-4 rounded-2xl outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+              placeholder="Email address"
+              required
+            />
+          </div>
 
-        <div className="my-6 text-center text-gray-500">OR</div>
+          <div className="relative group">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" size={20} />
+            <input
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full bg-white/5 border border-white/10 text-white pl-12 pr-4 py-4 rounded-2xl outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+              placeholder="Create password"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="bg-indigo-600/5 border border-indigo-600/10 p-4 rounded-2xl">
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.15em] mb-2">Password Requirements</p>
+          <ul className="grid grid-cols-2 gap-2">
+            {['8+ characters', 'Uppercase', 'Numbers', 'Symbols'].map(req => (
+              <li key={req} className="flex items-center gap-2 text-xs text-slate-400">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                {req}
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <button
-          onClick={handleGoogleSignup}
+          type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 border py-3 rounded hover:bg-gray-50"
+          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98]"
         >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            className="w-5 h-5"
-          />
-          Continue with Google
+          {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Get Started <ArrowRight size={20} /></>}
         </button>
 
-        <p className="text-center mt-6">
-          Already have an account?{' '}
-          <Link href="/signin" className="text-blue-600 font-semibold">
-            Sign in
-          </Link>
+        <p className="text-center text-slate-500 font-medium mt-8">
+          Already have an account? <Link href="/signin" className="text-white font-bold hover:underline">Sign In</Link>
         </p>
-      </motion.div>
-    </div>
+      </form>
+    </AuthLayout>
   )
 }
