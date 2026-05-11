@@ -9,6 +9,7 @@ import { auth, googleProvider } from '@/app/firebase/config'
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
 import Cookies from 'js-cookie'
 import AuthLayout from '@/components/AuthLayout'
+import GithubButton from '@/components/GithubButton'
 
 export default function SignIn() {
   const router = useRouter()
@@ -128,13 +129,7 @@ export default function SignIn() {
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" />
             Google
           </button>
-          <button
-            type="button"
-            className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white py-3 rounded-2xl font-bold hover:bg-white/10 transition"
-          >
-            <Github className="w-5 h-5" />
-            GitHub
-          </button>
+          <GithubButton />
         </div>
 
         <p className="text-center text-slate-500 font-medium mt-8">

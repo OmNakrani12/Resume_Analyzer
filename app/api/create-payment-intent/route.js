@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import Stripe from 'stripe'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 export async function POST() {
   try {
@@ -12,17 +13,13 @@ export async function POST() {
         },
       })
 
-    return NextResponse.json({
+    return Response.json({
       clientSecret: paymentIntent.client_secret,
     })
   } catch (err) {
-    return NextResponse.json(
-      {
-        error: err.message,
-      },
-      {
-        status: 500,
-      }
+    return Response.json(
+      { error: err.message },
+      { status: 500 }
     )
   }
 }

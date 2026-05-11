@@ -1,29 +1,54 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Users, Target, Zap, Heart } from 'lucide-react'
+
+import {
+  Users,
+  Target,
+  Zap,
+  Heart,
+  Sparkles,
+  ShieldCheck,
+  Rocket,
+  Globe,
+} from 'lucide-react'
 
 export default function About() {
   const values = [
     {
       icon: Target,
       title: 'Mission',
-      description: 'To help job seekers stand out with perfectly optimized resumes.',
+      description:
+        'Helping professionals create ATS-optimized resumes that open career opportunities.',
+      gradient:
+        'from-blue-500 to-cyan-500',
     },
+
     {
       icon: Users,
       title: 'Community',
-      description: 'Building a supportive community of career-minded professionals.',
+      description:
+        'Building a global community of ambitious professionals and job seekers.',
+      gradient:
+        'from-purple-500 to-pink-500',
     },
+
     {
       icon: Zap,
       title: 'Innovation',
-      description: 'Using cutting-edge AI to provide actionable resume insights.',
+      description:
+        'Using cutting-edge AI technology to deliver smarter resume insights.',
+      gradient:
+        'from-yellow-500 to-orange-500',
     },
+
     {
       icon: Heart,
       title: 'Excellence',
-      description: 'Committed to helping you achieve your career goals.',
+      description:
+        'Committed to helping users maximize interview and hiring success.',
+      gradient:
+        'from-green-500 to-emerald-500',
     },
   ]
 
@@ -31,165 +56,411 @@ export default function About() {
     {
       name: 'Sarah Johnson',
       role: 'Founder & CEO',
-      description: 'HR expert with 10+ years in recruitment',
+      description:
+        'HR expert with 10+ years of recruitment experience.',
     },
+
     {
       name: 'Michael Chen',
       role: 'CTO',
-      description: 'AI/ML specialist and full-stack developer',
+      description:
+        'AI engineer and full-stack SaaS architect.',
     },
+
     {
       name: 'Emily Rodriguez',
       role: 'Head of Product',
-      description: 'Product strategist with career coaching background',
+      description:
+        'Career strategist focused on user success.',
     },
+
     {
       name: 'David Kim',
       role: 'Lead Designer',
-      description: 'UX/UI designer passionate about user experience',
+      description:
+        'UX/UI designer passionate about premium experiences.',
     },
   ]
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  }
-
   return (
-    <div className="min-h-screen bg-white py-20 px-4">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="max-w-7xl mx-auto"
-      >
-        {/* Hero Section */}
+    <div className="relative overflow-hidden px-4 py-24">
+      {/* Background Glow */}
+      <div className="absolute left-[-10%] top-0 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
+
+      <div className="absolute bottom-0 right-[-10%] h-[500px] w-[500px] rounded-full bg-purple-500/10 blur-[120px]" />
+
+      <div className="relative z-10 mx-auto max-w-7xl">
+        {/* HERO */}
         <motion.div
-          variants={itemVariants}
-          className="text-center mb-20"
+          initial={{
+            opacity: 0,
+            y: 30,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.8,
+          }}
+          className="mx-auto mb-28 max-w-4xl text-center"
         >
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">About ResumeAI</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            We believe everyone deserves a resume that opens doors. Our mission is to provide AI-powered
-            insights that help job seekers create compelling, optimized resumes that get noticed.
+          {/* Badge */}
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-medium text-white backdrop-blur-xl">
+            <Sparkles
+              size={16}
+              className="text-blue-400"
+            />
+
+            About ResumeAI
+          </div>
+
+          {/* Heading */}
+          <h1 className="mb-8 text-5xl font-black leading-tight text-white md:text-7xl">
+            Empowering Careers With
+            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+              {' '}
+              AI Technology
+            </span>
+          </h1>
+
+          {/* Description */}
+          <p className="text-lg leading-relaxed text-gray-400 md:text-xl">
+            ResumeAI helps professionals optimize resumes,
+            improve ATS scores, and increase interview
+            opportunities using advanced artificial
+            intelligence and recruiter-focused insights.
           </p>
         </motion.div>
 
-        {/* Story Section */}
+        {/* STORY SECTION */}
         <motion.div
-          variants={itemVariants}
-          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-12 mb-20"
+          initial={{
+            opacity: 0,
+            y: 40,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.8,
+          }}
+          viewport={{
+            once: true,
+          }}
+          className="relative mb-28 overflow-hidden rounded-[40px] border border-white/10 bg-white/5 p-10 backdrop-blur-2xl md:p-16"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
-          <p className="text-lg text-gray-700 mb-4">
-            ResumeAI was founded in 2023 by a team of HR experts, developers, and career coaches
-            who saw a problem: talented professionals were losing opportunities simply because their
-            resumes weren't optimized for modern hiring practices.
-          </p>
-          <p className="text-lg text-gray-700">
-            We built ResumeAI to democratize career optimization. Our AI analyzes your resume against
-            industry standards and hiring trends, providing actionable feedback to help you stand out.
-            Today, we've helped thousands of professionals land their dream jobs.
-          </p>
+          {/* Glow */}
+          <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-blue-500/10 blur-[120px]" />
+
+          <div className="relative z-10 grid gap-14 lg:grid-cols-2">
+            {/* Left */}
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-white">
+                <Rocket
+                  size={16}
+                  className="text-blue-400"
+                />
+
+                Our Story
+              </div>
+
+              <h2 className="mb-6 text-4xl font-black text-white">
+                Built For Modern
+                <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                  {' '}
+                  Job Seekers
+                </span>
+              </h2>
+
+              <p className="mb-6 text-lg leading-relaxed text-gray-400">
+                ResumeAI was founded to solve a major
+                problem in modern hiring — talented
+                professionals were being rejected because
+                their resumes were not optimized for ATS
+                systems and recruiter expectations.
+              </p>
+
+              <p className="text-lg leading-relaxed text-gray-400">
+                We combined AI technology, hiring insights,
+                and modern resume optimization techniques to
+                create a platform that helps professionals
+                stand out in competitive job markets.
+              </p>
+            </div>
+
+            {/* Right Stats */}
+            <div className="grid grid-cols-2 gap-6">
+              {[
+                {
+                  value: '10K+',
+                  label: 'Resumes Optimized',
+                },
+
+                {
+                  value: '95%',
+                  label: 'ATS Success Rate',
+                },
+
+                {
+                  value: '4.9★',
+                  label: 'Average Rating',
+                },
+
+                {
+                  value: '50+',
+                  label: 'Countries',
+                },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{
+                    y: -8,
+                  }}
+                  className="rounded-3xl border border-white/10 bg-black/20 p-8 text-center backdrop-blur-xl"
+                >
+                  <h3 className="mb-2 text-5xl font-black text-white">
+                    {item.value}
+                  </h3>
+
+                  <p className="text-gray-400">
+                    {item.label}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
-        {/* Values Section */}
-        <motion.div
-          variants={containerVariants}
-          className="mb-20"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Our Values</h2>
-          <div className="grid md:grid-cols-4 gap-8">
+        {/* VALUES */}
+        <div className="mb-28">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 30,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.8,
+            }}
+            viewport={{
+              once: true,
+            }}
+            className="mx-auto mb-20 max-w-3xl text-center"
+          >
+            <h2 className="mb-6 text-5xl font-black text-white">
+              Our Core
+              <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                {' '}
+                Values
+              </span>
+            </h2>
+
+            <p className="text-lg text-gray-400">
+              The principles that drive innovation and user
+              success at ResumeAI.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
             {values.map((value, idx) => {
               const Icon = value.icon
+
               return (
                 <motion.div
                   key={idx}
-                  variants={itemVariants}
-                  whileHover={{ y: -10 }}
-                  className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-8 text-center hover:shadow-lg transition"
+                  initial={{
+                    opacity: 0,
+                    y: 40,
+                  }}
+                  whileInView={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    duration: 0.7,
+                    delay: idx * 0.1,
+                  }}
+                  viewport={{
+                    once: true,
+                  }}
+                  whileHover={{
+                    y: -10,
+                  }}
+                  className="group relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl"
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.2, rotate: 10 }}
-                    className="inline-block mb-4"
+                  {/* Glow */}
+                  <div
+                    className={`absolute right-0 top-0 h-40 w-40 rounded-full bg-gradient-to-r ${value.gradient} opacity-10 blur-3xl transition-all duration-500 group-hover:opacity-20`}
+                  />
+
+                  {/* Icon */}
+                  <div
+                    className={`mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r ${value.gradient}`}
                   >
-                    <Icon className="text-blue-600" size={40} />
-                  </motion.div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{value.title}</h3>
-                  <p className="text-gray-600">{value.description}</p>
+                    <Icon
+                      size={30}
+                      className="text-white"
+                    />
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="mb-4 text-2xl font-bold text-white">
+                    {value.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="leading-relaxed text-gray-400">
+                    {value.description}
+                  </p>
                 </motion.div>
               )
             })}
           </div>
-        </motion.div>
+        </div>
 
-        {/* Team Section */}
-        <motion.div
-          variants={containerVariants}
-          className="mb-20"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Our Team</h2>
-          <div className="grid md:grid-cols-4 gap-8">
+        {/* TEAM */}
+        <div className="mb-28">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 30,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.8,
+            }}
+            viewport={{
+              once: true,
+            }}
+            className="mx-auto mb-20 max-w-3xl text-center"
+          >
+            <h2 className="mb-6 text-5xl font-black text-white">
+              Meet The
+              <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                {' '}
+                Team
+              </span>
+            </h2>
+
+            <p className="text-lg text-gray-400">
+              A passionate team building the future of AI
+              resume optimization.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
             {team.map((member, idx) => (
               <motion.div
                 key={idx}
-                variants={itemVariants}
-                whileHover={{ y: -5 }}
-                className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition"
+                initial={{
+                  opacity: 0,
+                  y: 40,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.7,
+                  delay: idx * 0.1,
+                }}
+                viewport={{
+                  once: true,
+                }}
+                whileHover={{
+                  y: -10,
+                }}
+                className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl"
               >
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-32"></div>
-                <div className="p-6 -mt-8 relative">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full mx-auto mb-4"></div>
-                  <h3 className="text-lg font-semibold text-gray-900 text-center mb-1">{member.name}</h3>
-                  <p className="text-blue-600 font-medium text-center mb-2">{member.role}</p>
-                  <p className="text-gray-600 text-sm text-center">{member.description}</p>
+                {/* Top Gradient */}
+                <div className="relative h-32 bg-gradient-to-r from-blue-600 to-purple-600">
+                  <div className="absolute inset-0 bg-black/10" />
+                </div>
+
+                {/* Content */}
+                <div className="relative p-8">
+                  {/* Avatar */}
+                  <div className="-mt-20 mb-6 flex justify-center">
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-[#050816] bg-gradient-to-r from-blue-500 to-purple-600 text-3xl font-black text-white shadow-2xl">
+                      {member.name.charAt(0)}
+                    </div>
+                  </div>
+
+                  {/* Name */}
+                  <h3 className="mb-1 text-center text-xl font-bold text-white">
+                    {member.name}
+                  </h3>
+
+                  {/* Role */}
+                  <p className="mb-4 text-center font-medium text-blue-400">
+                    {member.role}
+                  </p>
+
+                  {/* Description */}
+                  <p className="text-center text-sm leading-relaxed text-gray-400">
+                    {member.description}
+                  </p>
                 </div>
               </motion.div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
-        {/* Stats Section */}
+        {/* FINAL CTA */}
         <motion.div
-          variants={containerVariants}
-          className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg p-12 text-white"
+          initial={{
+            opacity: 0,
+            y: 40,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.8,
+          }}
+          viewport={{
+            once: true,
+          }}
+          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-10 text-center backdrop-blur-2xl md:p-16"
         >
-          <h2 className="text-3xl font-bold mb-12 text-center">By the Numbers</h2>
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            {[
-              { number: '10K+', label: 'Resumes Analyzed' },
-              { number: '4.8★', label: 'Average Rating' },
-              { number: '95%', label: 'Success Rate' },
-              { number: '50+', label: 'Countries' },
-            ].map((stat, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <p className="text-4xl font-bold mb-2">{stat.number}</p>
-                <p className="text-blue-100">{stat.label}</p>
-              </motion.div>
-            ))}
+          {/* Glow */}
+          <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-blue-500/20 blur-[120px]" />
+
+          <div className="relative z-10">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm text-white backdrop-blur-xl">
+              <Globe
+                size={16}
+                className="text-blue-400"
+              />
+
+              Global AI Resume Platform
+            </div>
+
+            <h2 className="mb-6 text-5xl font-black text-white md:text-6xl">
+              Helping Professionals
+              <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                {' '}
+                Get Hired Faster
+              </span>
+            </h2>
+
+            <p className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-400 md:text-xl">
+              Join thousands of users optimizing resumes,
+              improving ATS scores, and landing more
+              interviews with ResumeAI.
+            </p>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
     </div>
   )
 }

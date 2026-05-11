@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { MapPin, Clock, BookOpen, ExternalLink, Award, Target } from 'lucide-react'
+import { MapPin, Clock, BookOpen, ExternalLink, Award, Target, Zap, CheckCircle } from 'lucide-react'
 
 export default function LearningRoadmap({ roadmapData }) {
     if (!roadmapData) return null
@@ -10,7 +10,10 @@ export default function LearningRoadmap({ roadmapData }) {
         items = [],
         phases = [],
         total_time = 'Not specified',
-        role = 'Professional'
+        role = 'Professional',
+        career_impact = null,
+        learning_tips = null,
+        source = 'unknown'
     } = roadmapData
 
     const priorityColors = {
@@ -19,19 +22,28 @@ export default function LearningRoadmap({ roadmapData }) {
         'Low': 'bg-green-100 text-green-700 border-green-300'
     }
 
+    const isAIGenerated = source === 'ai-generated'
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl shadow-lg p-6 space-y-6"
         >
-            {/* Header */}
+            {/* Header with AI Badge */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <MapPin className="text-purple-600" size={28} />
-                        Learning Roadmap
-                    </h3>
+                    <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                            <MapPin className="text-purple-600" size={28} />
+                            Learning Roadmap
+                        </h3>
+                        {isAIGenerated && (
+                            <span className="bg-linear-to-r from-purple-500 to-indigo-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <Zap size={12} /> AI Generated
+                            </span>
+                        )}
+                    </div>
                     <p className="text-gray-600 mt-1">Personalized path to become a better {role}</p>
                 </div>
                 <div className="text-right">
@@ -40,9 +52,40 @@ export default function LearningRoadmap({ roadmapData }) {
                 </div>
             </div>
 
+            {/* Learning Tips Section */}
+            {isAIGenerated && learning_tips && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="bg-linear-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-200"
+                >
+                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        💡 Learning Tips & Advice
+                    </h4>
+                    <p className="text-gray-700 leading-relaxed text-sm">{learning_tips}</p>
+                </motion.div>
+            )}
+
+            {/* Career Impact Section (AI Generated) */}
+            {isAIGenerated && career_impact && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-linear-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-200"
+                >
+                    <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <Zap className="text-indigo-600" size={20} />
+                        Career Impact
+                    </h4>
+                    <p className="text-gray-700 leading-relaxed">{career_impact}</p>
+                </motion.div>
+            )}
+
             {/* Phases Timeline */}
             {phases && phases.length > 0 && (
-                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-200">
+                <div className="bg-linear-to-r from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-200">
                     <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <Target size={20} className="text-purple-600" />
                         Learning Phases
@@ -108,6 +151,14 @@ export default function LearningRoadmap({ roadmapData }) {
                                 </div>
                             </div>
 
+                            {/* AI-Generated Learning Path */}
+                            {item.learning_path && (
+                                <div className="mt-4 p-3 bg-white rounded-lg border border-indigo-200">
+                                    <p className="text-sm font-semibold text-gray-700 mb-2">📚 Learning Approach</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed">{item.learning_path}</p>
+                                </div>
+                            )}
+
                             {/* Resources */}
                             <div className="mt-4">
                                 <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
@@ -115,7 +166,7 @@ export default function LearningRoadmap({ roadmapData }) {
                                     Learning Resources
                                 </p>
                                 <div className="grid md:grid-cols-2 gap-2">
-                                    {item.resources.map((resource, resIdx) => (
+                                    {item.resources && item.resources.map((resource, resIdx) => (
                                         <a
                                             key={resIdx}
                                             href={resource.url}
@@ -137,6 +188,31 @@ export default function LearningRoadmap({ roadmapData }) {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Milestones */}
+                            {item.milestones && item.milestones.length > 0 && (
+                                <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                                    <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                                        <CheckCircle size={16} className="text-green-600" /> Learning Milestones
+                                    </p>
+                                    <ul className="space-y-1">
+                                        {item.milestones.map((milestone, mIdx) => (
+                                            <li key={mIdx} className="text-sm text-gray-700 flex items-start gap-2">
+                                                <span className="text-green-600 mt-0.5">✓</span>
+                                                <span>{milestone}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Practical Project */}
+                            {item.practical_project && (
+                                <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                    <p className="text-sm font-semibold text-gray-700 mb-1">🚀 Practical Project</p>
+                                    <p className="text-sm text-gray-700">{item.practical_project}</p>
+                                </div>
+                            )}
                         </motion.div>
                     ))}
                 </div>
@@ -147,11 +223,11 @@ export default function LearningRoadmap({ roadmapData }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-6 text-white text-center"
+                className="bg-linear-to-r from-purple-600 to-indigo-600 rounded-xl p-6 text-white text-center"
             >
                 <h4 className="text-xl font-bold mb-2">Ready to Start Your Journey?</h4>
                 <p className="text-purple-100 mb-4">
-                    Follow this roadmap consistently and track your progress to achieve your career goals
+                    Follow this {isAIGenerated ? 'AI-personalized ' : ''}roadmap consistently and track your progress to achieve your career goals
                 </p>
                 <button className="bg-white text-purple-600 px-6 py-2 rounded-lg font-semibold hover:bg-purple-50 transition">
                     Save Roadmap

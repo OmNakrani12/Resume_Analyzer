@@ -61,17 +61,17 @@ export async function POST(req) {
     const resumeText = extractionResult.text
 
     // Step 2: Skills
-    const skillAnalysis = SkillExtractor.analyzeSkills(resumeText)
+    const skillAnalysis = await SkillExtractor.analyzeSkills(resumeText)
 
     // Step 3: ATS
-    const atsResult = ATSScorer.calculateAtsScore(resumeText, skillAnalysis)
+    const atsResult = await ATSScorer.calculateAtsScore(resumeText, skillAnalysis)
 
     // Step 4: AI analysis
     const aiAnalyzer = new AIAnalyzer()
     const aiResult = await aiAnalyzer.analyzeResume(resumeText)
 
-    // Step 5: Roadmap
-    const roadmapResult = RoadmapGenerator.generateRoadmap(
+    // Step 5: Roadmap (now async with Groq AI)
+    const roadmapResult = await RoadmapGenerator.generateRoadmap(
       skillAnalysis.suggested_skills,
       skillAnalysis.detected_role
     )
@@ -107,6 +107,9 @@ export async function POST(req) {
           items: roadmapResult.roadmap,
           phases: roadmapResult.phases,
           total_time: roadmapResult.total_estimated_time,
+          career_impact: roadmapResult.career_impact,
+          learning_tips: roadmapResult.learning_tips,
+          source: roadmapResult.source,
         },
         risk_analysis: riskAnalysis,
       },

@@ -5,12 +5,8 @@ import { TrendingUp, TrendingDown, AlertCircle, CheckCircle2 } from 'lucide-reac
 
 export default function ATSScoreCard({ atsData }) {
   if (!atsData) return null
-  const {
-    overall_score = 0,
-    category_scores = {},
-    recommendations = [],
-    ats_friendly = false
-  } = atsData
+
+  const { overall_score, category_scores, recommendations, ats_friendly } = atsData
 
   const getScoreColor = (score) => {
     if (score >= 80) return 'text-green-600 bg-green-50 border-green-200'
@@ -35,7 +31,7 @@ export default function ATSScoreCard({ atsData }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-xl shadow-lg p-6 space-y-6"
     >
