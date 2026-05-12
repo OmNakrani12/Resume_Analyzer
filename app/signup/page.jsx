@@ -30,8 +30,8 @@ import {
 import Cookies from 'js-cookie'
 
 import AuthLayout from '@/components/AuthLayout'
-
 import GithubButton from '@/components/GithubButton'
+import { userAPI } from '@/lib/api'
 
 export default function SignUp() {
   const router = useRouter()
@@ -78,22 +78,25 @@ export default function SignUp() {
         }
       )
 
+      // Initialize profile in database
+      await userAPI.updateProfile({
+        userId: cred.user.uid,
+        fullName: formData.fullName,
+        email: formData.email,
+      })
+
       await sendEmailVerification(
         cred.user
       )
 
-      const token =
-        await cred.user.getIdToken()
-
-      Cookies.set('token', token, {
-        expires: 7,
-      })
-
+      // AuthContext will handle token sync via onAuthStateChanged
       router.push('/verify-email')
     } catch (err) {
       setError(
-        err.message ||
-          'Registration failed'
+        err.code === 'auth/email-already-in-use'
+          ? 'Email already registered'
+          : err.message ||
+            'Registration failed'
       )
     } finally {
       setLoading(false)
@@ -105,26 +108,31 @@ export default function SignUp() {
     async () => {
       try {
         setLoading(true)
+        setError('')
 
-        const result =
-          await signInWithPopup(
-            auth,
-            googleProvider
-          )
+        const result = await signInWithPopup(
+          auth,
+          googleProvider
+        )
 
-        const token =
-          await result.user.getIdToken()
+        const user = result.user
 
-        Cookies.set('token', token, {
-          expires: 7,
+        // Initialize/Update profile in database
+        await userAPI.updateProfile({
+          userId: user.uid,
+          fullName: user.displayName || '',
+          email: user.email || '',
         })
 
+        // AuthContext will handle token sync via onAuthStateChanged
         router.push('/dashboard')
       } catch (err) {
-        setError(
-          err.message ||
-            'Google login failed'
-        )
+        if (err.code !== 'auth/popup-closed-by-user') {
+          setError(
+            err.message ||
+              'Google sign up failed'
+          )
+        }
       } finally {
         setLoading(false)
       }

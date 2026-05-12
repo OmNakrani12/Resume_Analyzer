@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, TrendingUp } from 'lucide-react'
 import { resumeAPI } from '@/lib/api'
+import Cookies from 'js-cookie'
 
 export default function FileUpload({ onAnalysis }) {
   const [isDragging, setIsDragging] = useState(false)
@@ -63,6 +64,12 @@ export default function FileUpload({ onAnalysis }) {
     setProgress(0)
 
     try {
+      // Get token from cookies
+      const token = Cookies.get('token')
+      if (!token) {
+        throw new Error('No authentication token found. Please sign in again.')
+      }
+
       // Create FormData
       const formData = new FormData()
       formData.append('file', file)
@@ -72,10 +79,13 @@ export default function FileUpload({ onAnalysis }) {
         setProgress(prev => Math.min(prev + 10, 90))
       }, 500)
 
-      // Call Next.js API route
+      // Call Next.js API route with authentication
       const response = await fetch('/api/analysis', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       })
 
       clearInterval(progressInterval)
@@ -105,10 +115,16 @@ export default function FileUpload({ onAnalysis }) {
           fileName: file.name,
           fileSize: file.size,
         }
-        await resumeAPI.saveAnalysis(dataToSave, result);
+        
+        // Save analysis to dashboard
+        const saveResult = await resumeAPI.saveAnalysis(dataToSave)
+        if (!saveResult.success) {
+          console.warn('Warning: Analysis saved locally but not stored to dashboard')
+        }
+        
         onAnalysis(result.data)
       } else {
-        throw new Error('Invalid response from server')
+        throw new Error(result.error || 'Invalid response from server')
       }
 
     } catch (err) {
@@ -136,7 +152,7 @@ export default function FileUpload({ onAnalysis }) {
         onDrop={handleDrop}
         className={`border-3 border-dashed rounded-xl p-12 text-center transition cursor-pointer ${isDragging
           ? 'border-blue-600 bg-blue-50'
-          : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+          : 'border-gray-600 bg-white/5 hover:border-gray-500 hover:bg-white/3'
           }`}
         whileHover={{ scale: 1.01 }}
       >
@@ -154,10 +170,10 @@ export default function FileUpload({ onAnalysis }) {
           >
             <Upload className="text-blue-600 mx-auto mb-4" size={48} />
           </motion.div>
-          <p className="text-lg font-semibold text-gray-900 mb-2">
+          <p className="text-lg font-semibold text-white  mb-2">
             Drop your resume here
           </p>
-          <p className="text-gray-600">or click to browse</p>
+          <p className="text-gray-500">or click to browse</p>
           <p className="text-sm text-gray-500 mt-2">PDF, DOC, DOCX, TXT - Max 10MB</p>
         </label>
       </motion.div>
@@ -167,13 +183,13 @@ export default function FileUpload({ onAnalysis }) {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-center justify-between"
+          className="bg-white/5 border-2 border-blue-500 rounded-xl p-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <FileText className="text-blue-600" size={24} />
             <div>
-              <p className="font-semibold text-gray-900">{file.name}</p>
-              <p className="text-sm text-gray-600">{(file.size / 1024).toFixed(2)} KB</p>
+              <p className="font-semibold text-white">{file.name}</p>
+              <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
             </div>
           </div>
           <CheckCircle className="text-green-600" size={24} />

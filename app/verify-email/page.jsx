@@ -58,10 +58,13 @@ export default function VerifyEmail() {
   }
 
   const handleLogout = async () => {
-    await signOut(auth)
-    Cookies.remove('token')
-    localStorage.removeItem('user')
-    router.push('/signin')
+    try {
+      await signOut(auth)
+      Cookies.remove('token')
+      router.push('/signin')
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   return (

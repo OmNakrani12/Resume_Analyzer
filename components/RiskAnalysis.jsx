@@ -1,7 +1,18 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Shield, AlertTriangle, CheckCircle, XCircle, TrendingUp, Info } from 'lucide-react'
+import { 
+  Shield, 
+  AlertTriangle, 
+  CheckCircle, 
+  XCircle, 
+  TrendingUp, 
+  Info,
+  Layers,
+  Sparkles,
+  Search,
+  Zap
+} from 'lucide-react'
 
 export default function RiskAnalysis({ riskData }) {
     if (!riskData) return null
@@ -11,238 +22,200 @@ export default function RiskAnalysis({ riskData }) {
         risk_level = 'Unknown',
         red_flags = [],
         recommendations = [],
-        detailed_analysis = {},
+        project_analysis = {
+            authenticity_score: 0,
+            detail_level: 'Unknown',
+            observation: ''
+        },
         metadata = {}
     } = riskData
 
-    // Get risk level color
-    const getRiskColor = () => {
+    // Get risk level visual config
+    const getRiskConfig = () => {
         if (overall_risk_score <= 30) return {
-            bg: 'bg-green-50',
-            border: 'border-green-200',
-            text: 'text-green-700',
-            badge: 'bg-green-100 text-green-800',
+            gradient: 'from-emerald-500/20 to-teal-500/10',
+            border: 'border-emerald-500/20',
+            text: 'text-emerald-400',
+            glow: 'shadow-emerald-500/10',
             icon: CheckCircle
         }
         if (overall_risk_score <= 60) return {
-            bg: 'bg-yellow-50',
-            border: 'border-yellow-200',
-            text: 'text-yellow-700',
-            badge: 'bg-yellow-100 text-yellow-800',
+            gradient: 'from-amber-500/20 to-orange-500/10',
+            border: 'border-amber-500/20',
+            text: 'text-amber-400',
+            glow: 'shadow-amber-500/10',
             icon: AlertTriangle
         }
         return {
-            bg: 'bg-red-50',
-            border: 'border-red-200',
-            text: 'text-red-700',
-            badge: 'bg-red-100 text-red-800',
+            gradient: 'from-rose-500/20 to-red-500/10',
+            border: 'border-rose-500/20',
+            text: 'text-rose-400',
+            glow: 'shadow-rose-500/10',
             icon: XCircle
         }
     }
 
-    const riskColor = getRiskColor()
-    const RiskIcon = riskColor.icon
-
-    // Get severity color
-    const getSeverityColor = (severity) => {
-        switch (severity) {
-            case 'High': return 'bg-red-100 text-red-700 border-red-300'
-            case 'Medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300'
-            case 'Low': return 'bg-blue-100 text-blue-700 border-blue-300'
-            default: return 'bg-gray-100 text-gray-700 border-gray-300'
-        }
-    }
+    const config = getRiskConfig()
+    const RiskIcon = config.icon
 
     return (
-        <div className="space-y-6">
-            {/* Risk Score Card */}
+        <div className="space-y-8 pb-12">
+            
+            {/* Main Risk Score Card */}
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`${riskColor.bg} border-2 ${riskColor.border} rounded-xl p-8`}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`relative overflow-hidden rounded-[2.5rem] border ${config.border} bg-gradient-to-br ${config.gradient} p-10 backdrop-blur-3xl ${config.glow}`}
             >
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className={`p-4 rounded-full ${riskColor.badge}`}>
-                            <RiskIcon size={32} className={riskColor.text} />
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Shield size={120} />
+                </div>
+
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="flex items-center gap-6">
+                        <div className={`p-5 rounded-[1.5rem] bg-white/5 border border-white/10 ${config.text}`}>
+                            <RiskIcon size={40} />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold text-gray-900">Risk Analysis</h3>
-                            <p className="text-gray-600 mt-1">Authenticity verification score</p>
+                            <h3 className="text-3xl font-black text-white tracking-tight">Risk Evaluation</h3>
+                            <p className="text-slate-400 mt-1 font-medium">AI-driven authenticity & consistency audit</p>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <div className={`text-5xl font-bold ${riskColor.text}`}>
+
+                    <div className="text-center md:text-right">
+                        <div className={`text-7xl font-black ${config.text}`}>
                             {overall_risk_score}
                         </div>
-                        <div className={`inline-block mt-2 px-4 py-1.5 rounded-full text-sm font-semibold ${riskColor.badge}`}>
-                            {risk_level} Risk
+                        <div className={`inline-block mt-3 px-6 py-2 rounded-2xl text-sm font-bold tracking-wider uppercase border ${config.border} bg-white/5 ${config.text}`}>
+                            {risk_level} Risk Level
                         </div>
                     </div>
                 </div>
 
-                {/* Risk Meter */}
-                <div className="mt-6">
-                    <div className="flex justify-between text-xs text-gray-600 mb-2">
-                        <span>Low Risk</span>
-                        <span>Medium Risk</span>
-                        <span>High Risk</span>
+                {/* Risk Progress Meter */}
+                <div className="relative z-10 mt-10">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-1">
+                        <span>Safe</span>
+                        <span>Elevated</span>
+                        <span>Critical</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-1">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${overall_risk_score}%` }}
-                            transition={{ duration: 1, ease: 'easeOut' }}
-                            className={`h-3 rounded-full ${overall_risk_score <= 30 ? 'bg-green-500' :
-                                    overall_risk_score <= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                }`}
+                            transition={{ duration: 1.5, ease: 'circOut' }}
+                            className={`h-full rounded-full bg-gradient-to-r from-transparent via-white/20 to-white/60`}
                         />
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>0</span>
-                        <span>30</span>
-                        <span>60</span>
-                        <span>100</span>
                     </div>
                 </div>
             </motion.div>
 
-            {/* Red Flags */}
-            {red_flags.length > 0 && (
+            <div className="grid lg:grid-cols-2 gap-8">
+                
+                {/* Red Flags Section */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="bg-white rounded-xl shadow-lg p-6"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-2xl"
                 >
-                    <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <AlertTriangle className="text-orange-600" size={24} />
-                        Red Flags Detected ({red_flags.length})
-                    </h4>
-                    <div className="space-y-3">
-                        {red_flags.map((flag, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 + idx * 0.1 }}
-                                className="border-l-4 border-orange-400 bg-orange-50 p-4 rounded-r-lg"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getSeverityColor(flag.severity)}`}>
-                                                {flag.severity}
-                                            </span>
-                                            <span className="font-semibold text-gray-900">{flag.category}</span>
-                                        </div>
-                                        <p className="text-gray-700 text-sm">{flag.description}</p>
-                                    </div>
-                                    <div className="ml-4 text-right">
-                                        <div className="text-sm font-semibold text-orange-600">
-                                            Impact: {flag.impact}
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
+                            <AlertTriangle className="text-rose-400" size={20} />
+                        </div>
+                        <h4 className="text-xl font-bold text-white">Critical Red Flags</h4>
                     </div>
-                </motion.div>
-            )}
 
-            {/* Detailed Analysis */}
-            {detailed_analysis && Object.keys(detailed_analysis).length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="bg-white rounded-xl shadow-lg p-6"
-                >
-                    <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <TrendingUp className="text-blue-600" size={24} />
-                        Detailed Category Analysis
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Object.entries(detailed_analysis).map(([category, score], idx) => (
-                            <motion.div
-                                key={category}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.3 + idx * 0.1 }}
-                                className="bg-gray-50 rounded-lg p-4"
-                            >
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-700 capitalize">
-                                        {category.replace(/_/g, ' ')}
-                                    </span>
-                                    <span className={`text-lg font-bold ${score <= 30 ? 'text-green-600' :
-                                            score <= 60 ? 'text-yellow-600' : 'text-red-600'
+                    {red_flags.length > 0 ? (
+                        <div className="space-y-4">
+                            {red_flags.map((flag, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    whileHover={{ x: 5 }}
+                                    className="group relative bg-white/5 border border-white/5 hover:border-rose-500/30 p-5 rounded-2xl transition-all duration-300"
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-white/5 ${
+                                            flag.severity === 'High' ? 'text-rose-400' : 'text-amber-400'
                                         }`}>
-                                        {score}
-                                    </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        className={`h-2 rounded-full ${score <= 30 ? 'bg-green-500' :
-                                                score <= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                            }`}
-                                        style={{ width: `${score}%` }}
-                                    />
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                                            {flag.severity}
+                                        </span>
+                                        <span className="text-slate-500 text-xs font-bold">Impact: {flag.impact}</span>
+                                    </div>
+                                    <h5 className="text-white font-bold mb-1">{flag.category}</h5>
+                                    <p className="text-slate-400 text-sm leading-relaxed">{flag.description}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                            <CheckCircle className="text-emerald-500/50 mb-4" size={48} />
+                            <p className="text-slate-400 font-medium">No major inconsistencies detected.</p>
+                        </div>
+                    )}
                 </motion.div>
-            )}
 
-            {/* Recommendations */}
-            {recommendations.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-white rounded-xl shadow-lg p-6"
-                >
-                    <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <Info className="text-blue-600" size={24} />
-                        Verification Recommendations
-                    </h4>
-                    <ul className="space-y-3">
-                        {recommendations.map((rec, idx) => (
-                            <motion.li
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.4 + idx * 0.1 }}
-                                className="flex items-start gap-3 bg-blue-50 p-3 rounded-lg"
-                            >
-                                <Shield className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
-                                <span className="text-gray-700">{rec}</span>
-                            </motion.li>
-                        ))}
-                    </ul>
-                </motion.div>
-            )}
-
-            {/* Metadata */}
-            {metadata && Object.keys(metadata).length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-gray-50 rounded-xl p-4"
-                >
-                    <h5 className="text-sm font-semibold text-gray-700 mb-3">Analysis Metadata</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        {Object.entries(metadata).map(([key, value]) => (
-                            <div key={key}>
-                                <div className="text-gray-500 capitalize">{key.replace(/_/g, ' ')}</div>
-                                <div className="font-semibold text-gray-900">{value}</div>
+                <div className="space-y-8">
+                    
+                    {/* Project Analysis Section */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-2xl relative overflow-hidden"
+                    >
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 blur-[60px] rounded-full" />
+                        
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                                <Layers className="text-indigo-400" size={20} />
                             </div>
-                        ))}
-                    </div>
-                </motion.div>
-            )}
+                            <h4 className="text-xl font-bold text-white">Project Authenticity Analysis</h4>
+                        </div>
+
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Authenticity Score</p>
+                                <p className="text-3xl font-black text-white">{project_analysis.authenticity_score}%</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Detail Level</p>
+                                <p className="text-lg font-bold text-indigo-400">{project_analysis.detail_level}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white/5 border border-white/5 rounded-2xl p-5 border-l-4 border-l-indigo-500">
+                            <div className="flex gap-3">
+                                <Search className="text-indigo-400 shrink-0 mt-1" size={18} />
+                                <p className="text-slate-300 text-sm leading-relaxed font-medium">
+                                    {project_analysis.observation || "Detailed project audit results will appear here after AI analysis."}
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Recommendations */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-indigo-500/10 to-transparent border border-white/10 rounded-[2rem] p-8"
+                    >
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                                <Zap className="text-indigo-400" size={20} />
+                            </div>
+                            <h4 className="text-xl font-bold text-white">Verification Steps</h4>
+                        </div>
+
+                        <div className="grid gap-3">
+                            {recommendations.map((rec, idx) => (
+                                <div key={idx} className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                                    <span className="text-slate-300 text-sm font-medium">{rec}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
         </div>
     )
 }

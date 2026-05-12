@@ -3,6 +3,7 @@ import './globals.css'
 
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
+import { AuthProvider } from '@/lib/context/AuthContext'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -57,15 +58,17 @@ export default function RootLayout({ children }) {
         {/* Main Wrapper */}
         <div className="relative z-10 flex min-h-screen flex-col">
           {/* Navigation */}
-          <Navigation />
+          <AuthProvider>
+            <Navigation />
 
-          {/* Main Content */}
-          <main className="flex-1">
-            {children}
-          </main>
+            {/* Main Content */}
+            <main className="flex-1">
+              {children}
+            </main>
 
-          {/* Footer */}
-          <Footer />
+            {/* Footer */}
+            <Footer />
+          </AuthProvider>
         </div>
       </body>
     </html>

@@ -83,12 +83,18 @@ export async function POST(req) {
 
     const resumeId = uuidv4()
     const createdAt = new Date().toISOString()
+    
+    // Extract scores from various possible locations
+    const atsScore = body.ats_score?.overall_score ?? 0
+    const overallScore = body.ai_analysis?.overallScore ?? body.overallScore ?? atsScore ?? 0
+    
     const resumeData = {
       meta: {
         fileName: body.fileName || 'resume.pdf',
         fileSize: body.fileSize || 0,
-        overallScore: body.ai_analysis?.overallScore ?? 0,
-        atsScore: body.ats_score?.overall_score ?? 0,
+        overallScore: overallScore,
+        atsScore: atsScore,
+        status: 'completed',
         createdAt,
       },
       analysis: {
@@ -96,9 +102,10 @@ export async function POST(req) {
         atsScore: body.ats_score || body.atsScore || {},
         skills: body.skills || {},
         roadmap: body.roadmap || {},
-        riskAnalysis: body.risk_analysis || body.riskAnalysis || {}, // NEW
+        riskAnalysis: body.risk_analysis || body.riskAnalysis || {},
       },
       extraction: body.extraction || {},
+      resumeText: body.resume_text || '',
     }
 
     await rtdb.ref(`resumes/${userId}/${resumeId}`).set(resumeData)

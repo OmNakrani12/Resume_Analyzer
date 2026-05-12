@@ -112,7 +112,7 @@ export default function About() {
               className="text-blue-400"
             />
 
-            About ResumeAI
+            About Resume
           </div>
 
           {/* Heading */}
@@ -126,7 +126,7 @@ export default function About() {
 
           {/* Description */}
           <p className="text-lg leading-relaxed text-gray-400 md:text-xl">
-            ResumeAI helps professionals optimize resumes,
+            Resume helps professionals optimize resumes,
             improve ATS scores, and increase interview
             opportunities using advanced artificial
             intelligence and recruiter-focused insights.
@@ -175,7 +175,7 @@ export default function About() {
               </h2>
 
               <p className="mb-6 text-lg leading-relaxed text-gray-400">
-                ResumeAI was founded to solve a major
+                ResuNexa was founded to solve a major
                 problem in modern hiring — talented
                 professionals were being rejected because
                 their resumes were not optimized for ATS
@@ -262,7 +262,7 @@ export default function About() {
 
             <p className="text-lg text-gray-400">
               The principles that drive innovation and user
-              success at ResumeAI.
+              success at Resume.
             </p>
           </motion.div>
 
@@ -456,7 +456,7 @@ export default function About() {
             <p className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-400 md:text-xl">
               Join thousands of users optimizing resumes,
               improving ATS scores, and landing more
-              interviews with ResumeAI.
+              interviews with Resume.
             </p>
           </div>
         </motion.div>

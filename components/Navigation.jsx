@@ -3,31 +3,78 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-import { useState, useEffect } from 'react'
+import {
+  useState,
+  useEffect,
+} from 'react'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import {
+  useRouter,
+} from 'next/navigation'
+
+import {
+  motion,
+  AnimatePresence,
+} from 'framer-motion'
 
 import {
   Menu,
   X,
   Sparkles,
   ArrowRight,
+  LogOut,
 } from 'lucide-react'
 
+import {
+  onAuthStateChanged,
+  signOut,
+} from 'firebase/auth'
+
+import Cookies from 'js-cookie'
+
+import { auth } from '@/app/firebase/config'
+
 import ProfileDropdown from './ProfileDropdown'
+
 import logo from '../public/logo.png'
 
 export default function Navigation() {
-  const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
 
-  const [scrolled, setScrolled] = useState(false)
+  const [isOpen, setIsOpen] =
+    useState(false)
 
+  const [scrolled, setScrolled] =
+    useState(false)
+
+  const [user, setUser] =
+    useState(null)
+
+  /* ================= AUTH ================= */
+  useEffect(() => {
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        (currentUser) => {
+          setUser(currentUser)
+        }
+      )
+
+    return () => unsubscribe()
+  }, [])
+
+  /* ================= SCROLL ================= */
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
+      setScrolled(
+        window.scrollY > 10
+      )
     }
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener(
+      'scroll',
+      handleScroll
+    )
 
     return () =>
       window.removeEventListener(
@@ -35,6 +82,22 @@ export default function Navigation() {
         handleScroll
       )
   }, [])
+
+  /* ================= LOGOUT ================= */
+  const handleLogout =
+    async () => {
+      try {
+        await signOut(auth)
+
+        Cookies.remove('token')
+
+        setIsOpen(false)
+
+        router.push('/signin')
+      } catch (err) {
+        console.error(err)
+      }
+    }
 
   const navItems = [
     {
@@ -82,7 +145,8 @@ export default function Navigation() {
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
-          {/* Logo */}
+
+          {/* ================= LOGO ================= */}
           <motion.div
             initial={{
               opacity: 0,
@@ -104,12 +168,12 @@ export default function Navigation() {
               <div className="relative">
                 <div className="absolute inset-0 rounded-2xl bg-blue-500/30 blur-xl transition-all duration-300 group-hover:bg-purple-500/40" />
 
-                <div className="relative rounded-2xl border border-white/10 bg-white/5 p-2 backdrop-blur-xl">
+                <div className="relative rounded-2xl p-2 backdrop-blur-xl">
                   <Image
                     src={logo}
-                    alt="ResumeAI Logo"
-                    width={38}
-                    height={38}
+                    alt="ResuNexa Logo"
+                    width={60}
+                    height={60}
                     className="object-contain"
                   />
                 </div>
@@ -117,8 +181,12 @@ export default function Navigation() {
 
               {/* Brand */}
               <div>
-                <h1 className="text-2xl font-black tracking-tight text-white">
-                  ResuNexa
+                <h1 className="flex text-2xl font-black tracking-tight text-white">
+                  <span>Resu</span>
+
+                  <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+                    Nexa
+                  </span>
                 </h1>
 
                 <p className="text-xs text-gray-400">
@@ -128,40 +196,43 @@ export default function Navigation() {
             </Link>
           </motion.div>
 
-          {/* Desktop Menu */}
+          {/* ================= DESKTOP NAV ================= */}
           <div className="hidden items-center gap-8 md:flex">
-            {navItems.map((item, idx) => (
-              <motion.div
-                key={item.href}
-                initial={{
-                  opacity: 0,
-                  y: -10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  duration: 0.4,
-                  delay: idx * 0.1,
-                }}
-              >
-                <Link
-                  href={item.href}
-                  className="group relative text-sm font-medium text-gray-300 transition hover:text-white"
+            {navItems.map(
+              (item, idx) => (
+                <motion.div
+                  key={item.href}
+                  initial={{
+                    opacity: 0,
+                    y: -10,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    delay:
+                      idx * 0.1,
+                  }}
                 >
-                  {item.label}
+                  <Link
+                    href={item.href}
+                    className="group relative text-sm font-medium text-gray-300 transition hover:text-white"
+                  >
+                    {item.label}
 
-                  {/* Hover Underline */}
-                  <span className="absolute -bottom-2 left-0 h-[2px] w-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 group-hover:w-full" />
-                </Link>
-              </motion.div>
-            ))}
+                    <span className="absolute -bottom-2 left-0 h-[2px] w-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 group-hover:w-full" />
+                  </Link>
+                </motion.div>
+              )
+            )}
           </div>
 
-          {/* Right Side */}
+          {/* ================= RIGHT SIDE ================= */}
           <div className="hidden items-center gap-4 md:flex">
-            {/* Upgrade Button */}
+
+            {/* Upgrade */}
             <motion.div
               initial={{
                 opacity: 0,
@@ -190,13 +261,33 @@ export default function Navigation() {
               </Link>
             </motion.div>
 
-            {/* Profile */}
-            <ProfileDropdown />
+            {/* Auth */}
+            {user ? (
+              <ProfileDropdown />
+            ) : (
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/signin"
+                  className="text-sm font-medium text-gray-300 transition hover:text-white"
+                >
+                  Sign In
+                </Link>
+
+                <Link
+                  href="/signup"
+                  className="rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-500/20 transition-all duration-300 hover:scale-105"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
           </div>
 
-          {/* Mobile Button */}
+          {/* ================= MOBILE BUTTON ================= */}
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() =>
+              setIsOpen(!isOpen)
+            }
             className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white backdrop-blur-xl transition hover:bg-white/10 md:hidden"
           >
             {isOpen ? (
@@ -208,7 +299,7 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* ================= MOBILE MENU ================= */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -230,50 +321,91 @@ export default function Navigation() {
             className="border-t border-white/10 bg-black/60 backdrop-blur-2xl md:hidden"
           >
             <div className="space-y-2 px-4 py-6">
-              {navItems.map((item, idx) => (
-                <motion.div
-                  key={item.href}
-                  initial={{
-                    opacity: 0,
-                    x: -20,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    x: 0,
-                  }}
-                  transition={{
-                    delay: idx * 0.1,
-                  }}
-                >
-                  <Link
-                    href={item.href}
-                    onClick={() =>
-                      setIsOpen(false)
-                    }
-                    className="block rounded-2xl border border-transparent px-4 py-3 text-gray-300 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
+
+              {/* Nav Items */}
+              {navItems.map(
+                (item, idx) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{
+                      opacity: 0,
+                      x: -20,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                    }}
+                    transition={{
+                      delay:
+                        idx * 0.1,
+                    }}
                   >
-                    {item.label}
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link
+                      href={item.href}
+                      onClick={() =>
+                        setIsOpen(
+                          false
+                        )
+                      }
+                      className="block rounded-2xl border border-transparent px-4 py-3 text-gray-300 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
+                    >
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                )
+              )}
 
               {/* Mobile Buttons */}
               <div className="mt-6 grid gap-3">
-                <Link
-                  href="/signin"
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center font-medium text-white backdrop-blur-xl transition hover:bg-white/10"
-                >
-                  Sign In
-                </Link>
 
-                <Link
-                  href="/signup"
-                  className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 font-semibold text-white shadow-xl shadow-blue-500/20"
-                >
-                  Get Started
+                {user ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      onClick={() =>
+                        setIsOpen(
+                          false
+                        )
+                      }
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center font-medium text-white backdrop-blur-xl transition hover:bg-white/10"
+                    >
+                      Dashboard
+                    </Link>
 
-                  <ArrowRight size={18} />
-                </Link>
+                    <button
+                      onClick={
+                        handleLogout
+                      }
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 px-4 py-3 font-semibold text-white shadow-xl shadow-red-500/20 transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      <LogOut
+                        size={18}
+                      />
+
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/signin"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center font-medium text-white backdrop-blur-xl transition hover:bg-white/10"
+                    >
+                      Sign In
+                    </Link>
+
+                    <Link
+                      href="/signup"
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 font-semibold text-white shadow-xl shadow-blue-500/20"
+                    >
+                      Get Started
+
+                      <ArrowRight
+                        size={18}
+                      />
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

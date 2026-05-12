@@ -87,7 +87,7 @@ export default function Hero() {
             {/* Heading */}
             <motion.h1
               variants={itemVariants}
-              className="mb-8 text-5xl font-black leading-tight text-white md:text-7xl"
+              className="mb-8 text-4xl font-black leading-tight text-white md:text-7xl"
             >
               Optimize Your Resume
               <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
@@ -99,7 +99,7 @@ export default function Hero() {
             {/* Description */}
             <motion.p
               variants={itemVariants}
-              className="mb-10 max-w-2xl text-lg leading-relaxed text-gray-400 md:text-xl"
+              className="mb-10 max-w-2xl text-base leading-relaxed text-gray-400 md:text-xl"
             >
               Improve your ATS score, optimize keywords,
               enhance resume structure, and increase your
@@ -114,7 +114,7 @@ export default function Hero() {
             >
               <Link
                 href="/analyze"
-                className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-5 text-lg font-semibold text-white shadow-2xl shadow-blue-500/20 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/30"
+                className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 text-base md:text-lg font-semibold text-white shadow-2xl shadow-blue-500/20 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/30"
               >
                 Analyze Resume
 
@@ -126,7 +126,7 @@ export default function Hero() {
 
               <Link
                 href="/pricing"
-                className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-8 py-5 text-lg font-semibold text-white backdrop-blur-xl transition-all duration-300 hover:border-white/20 hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-base md:text-lg font-semibold text-white backdrop-blur-xl transition-all duration-300 hover:border-white/20 hover:bg-white/10"
               >
                 View Pricing
               </Link>
@@ -135,7 +135,7 @@ export default function Hero() {
             {/* Features */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-wrap gap-4"
+              className="flex flex-wrap gap-3"
             >
               {[
                 {
@@ -158,9 +158,9 @@ export default function Hero() {
                 return (
                   <div
                     key={i}
-                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300 backdrop-blur-xl"
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300 backdrop-blur-xl"
                   >
-                    <Icon size={16} />
+                    <Icon size={14} />
 
                     {item.text}
                   </div>
@@ -172,7 +172,7 @@ export default function Hero() {
           {/* RIGHT SIDE */}
           <motion.div
             variants={itemVariants}
-            className="relative flex items-center justify-center"
+            className="relative hidden items-center justify-center lg:flex"
           >
             {/* Main Dashboard */}
             <div className="relative w-full max-w-[560px] overflow-hidden rounded-[40px] border border-white/10 bg-[#0b1120]/80 shadow-[0_0_80px_rgba(59,130,246,0.15)] backdrop-blur-3xl">

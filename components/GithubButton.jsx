@@ -16,11 +16,9 @@ import {
   ArrowRight,
   Loader2,
 } from 'lucide-react'
-import Cookies from 'js-cookie'
-
 import { motion } from 'framer-motion'
-
 import { useRouter } from 'next/navigation'
+import { userAPI } from '@/lib/api'
 
 export default function GithubButton() {
   const [loading, setLoading] =
@@ -35,21 +33,22 @@ export default function GithubButton() {
       setLoading(true)
       setError('')
 
-      const result =
-        await signInWithPopup(
-          auth,
-          githubProvider
-        )
-        if (result.user) {
-            const token =
-            await result.user.getIdToken()
-    
-            Cookies.set('token', token, {
-            expires: 7,
-            })
-            console.log(result.user)
-            router.push('/dashboard')
-        }
+      const result = await signInWithPopup(
+        auth,
+        githubProvider
+      )
+      
+      const user = result.user
+      
+      // Initialize/Update profile in database
+      await userAPI.updateProfile({
+        userId: user.uid,
+        fullName: user.displayName || '',
+        email: user.email || '',
+      })
+
+      // AuthContext will handle token sync via onAuthStateChanged
+      router.push('/dashboard')
     } catch (err) {
         console.error(err)
         switch (err.code) {

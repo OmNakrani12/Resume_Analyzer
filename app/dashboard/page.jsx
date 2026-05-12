@@ -12,12 +12,12 @@ import {
   Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
-import { resumeAPI, userAPI, authAPI } from '@/lib/api'
+import { resumeAPI, userAPI } from '@/lib/api'
+import { useAuth } from '@/lib/context/AuthContext'
 
 export default function Dashboard() {
   const router = useRouter()
-
-  const [user, setUser] = useState(null)
+  const { user: authUser, loading: authLoading, logout } = useAuth()
   const [resumes, setResumes] = useState([])
   const [stats, setStats] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,37 +26,45 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userStr = localStorage.getItem('user')
-
-        if (!userStr) {
+        if (!authUser) {
           router.push('/signin')
           return
         }
 
-        const storedUser = JSON.parse(userStr)
-
-        setUser(storedUser)
-
-        const userId = storedUser?.uid || 'default_user'
+        const userId = authUser?.uid || 'default_user'
 
         const [profileResponse, resumesResponse] = await Promise.all([
           userAPI.getProfile(userId),
           resumeAPI.list(userId, 1, 10),
         ])
 
-        const profile = profileResponse?.data?.data || {
+        const profile = profileResponse?.data || {
           resumesAnalyzed: 0,
           resumeLimit: 10,
           subscription: 'free',
-          email: storedUser.email || 'user@example.com',
+          email: authUser.email || 'user@example.com',
         }
 
         const resumesList =
-          resumesResponse?.data?.data?.resumes || []
+          resumesResponse?.data?.resumes || []
 
         setResumes(resumesList)
 
-        const avgScore =
+        const avgAtsScore =
+          resumesList.length > 0
+            ? Math.round(
+                resumesList.reduce(
+                  (sum, r) =>
+                    sum +
+                    Number(
+                      r.atsScore ?? 0
+                    ),
+                  0
+                ) / resumesList.length
+              )
+            : 0
+
+        const avgOverallScore =
           resumesList.length > 0
             ? Math.round(
                 resumesList.reduce(
@@ -89,7 +97,7 @@ export default function Dashboard() {
           {
             icon: TrendingUp,
             label: 'Average ATS Score',
-            value: `${avgScore}%`,
+            value: `${avgAtsScore}%`,
             change:
               (profile.subscription || 'free')
                 .charAt(0)
@@ -106,7 +114,7 @@ export default function Dashboard() {
               (profile.subscription || 'free').slice(1),
             change:
               profile.email ||
-              storedUser.email ||
+              authUser.email ||
               'user@example.com',
           },
         ])
@@ -123,17 +131,17 @@ export default function Dashboard() {
       }
     }
 
-    fetchData()
-  }, [])
+    if (!authLoading) {
+      fetchData()
+    }
+  }, [authUser, authLoading])
 
   const handleLogout = async () => {
     try {
-      await authAPI.logout()
+      await logout()
+      router.push('/signin')
     } catch (err) {
       console.error(err)
-    } finally {
-      localStorage.clear()
-      router.push('/signin')
     }
   }
 
@@ -209,7 +217,7 @@ export default function Dashboard() {
                 Welcome back,
                 <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
                   {' '}
-                  {user?.name || 'Professional'}
+                  {authUser?.displayName || 'Professional'}
                 </span>
               </h1>
 
@@ -228,7 +236,7 @@ export default function Dashboard() {
                 Analyze Resume
               </Link>
 
-              <button
+              {/* <button
                 onClick={handleLogout}
                 className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-7 py-3 rounded-2xl font-semibold transition-all duration-300 hover:scale-105"
               >
@@ -237,7 +245,7 @@ export default function Dashboard() {
                   className="inline mr-2"
                 />
                 Logout
-              </button>
+              </button> */}
             </div>
           </div>
         </motion.div>
@@ -356,97 +364,157 @@ export default function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left py-4 px-4 text-slate-400 font-semibold">
-                      Resume
-                    </th>
+            <>
+              {/* Desktop View Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-4 px-4 text-slate-400 font-semibold text-sm uppercase tracking-wider">
+                        Resume
+                      </th>
 
-                    <th className="text-left py-4 px-4 text-slate-400 font-semibold">
-                      ATS Score
-                    </th>
+                      <th className="text-left py-4 px-4 text-slate-400 font-semibold text-sm uppercase tracking-wider">
+                        ATS Score
+                      </th>
 
-                    <th className="text-left py-4 px-4 text-slate-400 font-semibold">
-                      Date
-                    </th>
+                      <th className="text-left py-4 px-4 text-slate-400 font-semibold text-sm uppercase tracking-wider">
+                        Overall Score
+                      </th>
 
-                    <th className="text-left py-4 px-4 text-slate-400 font-semibold">
-                      Status
-                    </th>
+                      <th className="text-left py-4 px-4 text-slate-400 font-semibold text-sm uppercase tracking-wider">
+                        Date
+                      </th>
 
-                    <th className="text-left py-4 px-4 text-slate-400 font-semibold">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
+                      <th className="text-left py-4 px-4 text-slate-400 font-semibold text-sm uppercase tracking-wider">
+                        Status
+                      </th>
 
-                <tbody>
-                  {resumes.map((resume, idx) => (
-                    <motion.tr
-                      key={resume.id}
-                      initial={{
-                        opacity: 0,
-                        x: -20,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        x: 0,
-                      }}
-                      transition={{
-                        delay: idx * 0.1,
-                      }}
-                      className="border-b border-white/5 hover:bg-white/5 transition"
-                    >
-                      <td className="py-5 px-4 text-white font-medium">
-                        {resume.fileName}
-                      </td>
+                      <th className="text-left py-4 px-4 text-slate-400 font-semibold text-sm uppercase tracking-wider">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
 
-                      <td className="py-5 px-4">
-                        <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 px-4 py-1.5 rounded-full text-sm font-semibold">
-                          {resume.overallScore ||
-                            resume.score ||
-                            'N/A'}
-                        </span>
-                      </td>
+                  <tbody>
+                    {resumes.map((resume, idx) => (
+                      <motion.tr
+                        key={resume.id}
+                        initial={{
+                          opacity: 0,
+                          x: -20,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          x: 0,
+                        }}
+                        transition={{
+                          delay: idx * 0.1,
+                        }}
+                        className="border-b border-white/5 hover:bg-white/5 transition group"
+                      >
+                        <td className="py-5 px-4 text-white font-medium">
+                          {resume.fileName}
+                        </td>
 
-                      <td className="py-5 px-4 text-slate-400">
-                        {new Date(
-                          resume.createdAt ||
-                            resume.uploadedAt ||
-                            Date.now()
-                        ).toLocaleDateString()}
-                      </td>
+                        <td className="py-5 px-4">
+                          <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-4 py-1.5 rounded-full text-sm font-bold">
+                            {resume.atsScore || 0}%
+                          </span>
+                        </td>
 
-                      <td className="py-5 px-4">
-                        <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 px-4 py-1.5 rounded-full text-sm font-semibold">
-                          {(
-                            resume.status ||
-                            'completed'
-                          )
-                            .charAt(0)
-                            .toUpperCase() +
-                            (
+                        <td className="py-5 px-4">
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-1.5 rounded-full text-sm font-bold">
+                            {resume.overallScore ||
+                              resume.score ||
+                              'N/A'}
+                          </span>
+                        </td>
+
+                        <td className="py-5 px-4 text-slate-400 text-sm">
+                          {new Date(
+                            resume.createdAt ||
+                              resume.uploadedAt ||
+                              Date.now()
+                          ).toLocaleDateString()}
+                        </td>
+
+                        <td className="py-5 px-4">
+                          <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-4 py-1.5 rounded-full text-sm font-bold">
+                            {(
                               resume.status ||
                               'completed'
-                            ).slice(1)}
-                        </span>
-                      </td>
+                            )
+                              .charAt(0)
+                              .toUpperCase() +
+                              (
+                                resume.status ||
+                                'completed'
+                              ).slice(1)}
+                          </span>
+                        </td>
 
-                      <td className="py-5 px-4">
-                        <Link
-                          href={`/resume/${resume.id}`}
-                          className="text-cyan-400 hover:text-cyan-300 font-semibold transition"
-                        >
-                          View Analysis →
-                        </Link>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <td className="py-5 px-4">
+                          <Link
+                            href={`/resume/${resume.id}`}
+                            className="text-indigo-400 hover:text-white font-bold transition-all flex items-center gap-2 group-hover:translate-x-1"
+                          >
+                            View Analysis 
+                            <TrendingUp size={14} />
+                          </Link>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View Cards */}
+              <div className="md:hidden space-y-4">
+                {resumes.map((resume, idx) => (
+                  <motion.div
+                    key={resume.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="bg-white/5 border border-white/10 rounded-2xl p-5"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h4 className="text-white font-bold text-lg truncate max-w-[200px]">
+                          {resume.fileName}
+                        </h4>
+                        <p className="text-slate-500 text-xs mt-1">
+                          {new Date(resume.createdAt || resume.uploadedAt || Date.now()).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-indigo-500/20">
+                        {resume.status || 'completed'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-5">
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                        <p className="text-slate-500 text-[10px] uppercase font-bold mb-1 tracking-wider">ATS Score</p>
+                        <p className="text-blue-400 font-black text-xl">{resume.atsScore || 0}%</p>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                        <p className="text-slate-500 text-[10px] uppercase font-bold mb-1 tracking-wider">Overall</p>
+                        <p className="text-emerald-400 font-black text-xl">{resume.overallScore || resume.score || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/resume/${resume.id}`}
+                      className="flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-3 rounded-xl transition-all active:scale-95"
+                    >
+                      View Analysis
+                      <TrendingUp size={16} />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </>
           )}
         </motion.div>
       </motion.div>

@@ -1,88 +1,176 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import {
+  useState,
+  useEffect,
+} from 'react'
+
 import { useRouter } from 'next/navigation'
+
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, MapPin, Briefcase, Edit2, Save, X, ArrowLeft } from 'lucide-react'
+
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Briefcase,
+  Edit2,
+  Save,
+  X,
+  ArrowLeft,
+  Camera,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react'
+
 import Link from 'next/link'
+
 import { userAPI } from '@/lib/api'
+
+import { useAuth } from '@/lib/context/AuthContext'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    location: '',
-    bio: '',
-    jobTitle: ''
-  })
-  const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+
+  const {
+    user: authUser,
+    loading: authLoading,
+  } = useAuth()
+
+  const [profile, setProfile] =
+    useState({
+      fullName: '',
+      email: '',
+      phone: '',
+      location: '',
+      bio: '',
+      jobTitle: '',
+    })
+
+  const [isEditing, setIsEditing] =
+    useState(false)
+
+  const [loading, setLoading] =
+    useState(true)
+
+  const [saving, setSaving] =
+    useState(false)
+
+  const [error, setError] =
+    useState('')
+
+  const [success, setSuccess] =
+    useState('')
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const userStr = localStorage.getItem('user')
-        if (!userStr) {
-          router.push('/signin')
-          return
+    const fetchProfile =
+      async () => {
+        try {
+          if (!authUser) {
+            router.push('/signin')
+            return
+          }
+
+          const userId =
+            authUser?.uid ||
+            'default_user'
+
+          const response =
+            await userAPI.getProfile(
+              userId
+            )
+
+          const profileData =
+            response?.data?.data ||
+            {}
+
+          setProfile({
+            fullName:
+              profileData.fullName ||
+              authUser.displayName ||
+              '',
+
+            email:
+              profileData.email ||
+              authUser.email ||
+              '',
+
+            phone:
+              profileData.phone ||
+              '',
+
+            location:
+              profileData.location ||
+              '',
+
+            bio:
+              profileData.bio || '',
+
+            jobTitle:
+              profileData.jobTitle ||
+              '',
+          })
+        } catch (err) {
+          console.error(err)
+
+          setError(
+            'Failed to load profile'
+          )
+        } finally {
+          setLoading(false)
         }
-
-        const storedUser = JSON.parse(userStr)
-        setUser(storedUser)
-        const userId = storedUser?.uid || 'default_user'
-        const response = await userAPI.getProfile(userId)
-        const profileData = response?.data?.data || {}
-        setProfile({
-          fullName: profileData.fullName || storedUser.displayName || '',
-          email: profileData.email || storedUser.email || '',
-          phone: profileData.phone || '',
-          location: profileData.location || '',
-          bio: profileData.bio || '',
-          jobTitle: profileData.jobTitle || ''
-        })
-      } catch (err) {
-        console.error('Profile fetch error:', err)
-        setError('Failed to load profile')
-      } finally {
-        setLoading(false)
       }
-    }
 
-    fetchProfile()
-  }, [router])
+    if (!authLoading) {
+      fetchProfile()
+    }
+  }, [
+    authUser,
+    authLoading,
+    router,
+  ])
 
   const handleChange = (e) => {
     setProfile({
       ...profile,
-      [e.target.name]: e.target.value
+      [e.target.name]:
+        e.target.value,
     })
   }
 
   const handleSave = async () => {
     setSaving(true)
+
     setError('')
+
     setSuccess('')
 
     try {
-      const userId = user?.uid || 'default_user'
+      const userId =
+        authUser?.uid ||
+        'default_user'
+
       await userAPI.updateProfile({
         userId,
-        ...profile
+        ...profile,
       })
 
-      setSuccess('Profile updated successfully!')
+      setSuccess(
+        'Profile updated successfully!'
+      )
+
       setIsEditing(false)
 
-      setTimeout(() => setSuccess(''), 3000)
+      setTimeout(() => {
+        setSuccess('')
+      }, 3000)
     } catch (err) {
-      console.error('Profile update error:', err)
-      setError('Failed to update profile. Please try again.')
+      console.error(err)
+
+      setError(
+        'Failed to update profile'
+      )
     } finally {
       setSaving(false)
     }
@@ -90,247 +178,369 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setIsEditing(false)
+
     setError('')
+
     setSuccess('')
   }
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#030712]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <div className="mx-auto mb-5 h-14 w-14 animate-spin rounded-full border-4 border-blue-500/20 border-t-blue-500" />
+
+          <p className="text-gray-400">
+            Loading profile...
+          </p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4">
+    <div className="relative min-h-screen overflow-hidden bg-[#030712] px-4 py-12">
+      {/* Glow Effects */}
+      <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-blue-500/10 blur-[140px]" />
+
+      <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-purple-500/10 blur-[140px]" />
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        initial={{
+          opacity: 0,
+          y: 20,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        className="relative z-10 mx-auto max-w-5xl"
       >
         {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4"
-          >
-            <ArrowLeft size={20} className="mr-2" />
-            Back to Dashboard
-          </Link>
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">My Profile</h1>
-              <p className="text-gray-600 mt-1">Manage your account information</p>
-            </div>
-            {!isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
-              >
-                <Edit2 size={20} />
-                Edit Profile
-              </button>
-            )}
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <Link
+              href="/dashboard"
+              className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-gray-400 transition hover:text-white"
+            >
+              <ArrowLeft size={18} />
+              Back to Dashboard
+            </Link>
+
+            <h1 className="text-5xl font-black text-white">
+              My Profile
+            </h1>
+
+            <p className="mt-3 text-gray-400">
+              Manage your account
+              and personal
+              information
+            </p>
           </div>
+
+          {!isEditing && (
+            <motion.button
+              whileHover={{
+                scale: 1.03,
+              }}
+              whileTap={{
+                scale: 0.97,
+              }}
+              onClick={() =>
+                setIsEditing(true)
+              }
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 font-semibold text-white shadow-2xl shadow-blue-500/20 transition-all duration-300"
+            >
+              <Edit2 size={18} />
+              Edit Profile
+            </motion.button>
+          )}
         </div>
 
-        {/* Messages */}
+        {/* Error */}
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6"
+            initial={{
+              opacity: 0,
+              y: -10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-red-400 backdrop-blur-xl"
           >
             {error}
           </motion.div>
         )}
 
+        {/* Success */}
         {success && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6"
+            initial={{
+              opacity: 0,
+              y: -10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            className="mb-6 rounded-2xl border border-green-500/20 bg-green-500/10 p-4 text-green-400 backdrop-blur-xl"
           >
             {success}
           </motion.div>
         )}
 
-        {/* Profile Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-lg overflow-hidden"
-        >
-          {/* Avatar Section */}
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-white">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold text-4xl">
-                {profile.fullName?.[0]?.toUpperCase() || profile.email?.[0]?.toUpperCase() || 'U'}
+        {/* Main Card */}
+        <div className="overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.03] shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-3xl">
+          {/* Hero Section */}
+          <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-r from-blue-600/20 via-indigo-600/10 to-purple-600/20 p-10">
+            <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-blue-500/10 blur-[120px]" />
+
+            <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center">
+              {/* Avatar */}
+              <div className="relative">
+                {authUser?.photoURL ? (
+                  <img
+                    src={
+                      authUser.photoURL
+                    }
+                    alt="Profile"
+                    className="h-32 w-32 rounded-full border border-white/10 object-cover shadow-2xl"
+                  />
+                ) : (
+                  <div className="flex h-32 w-32 items-center justify-center rounded-[32px] bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 shadow-2xl shadow-blue-500/20">
+                    <User
+                      size={52}
+                      className="text-white"
+                    />
+                  </div>
+                )}
+
+                <button className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl">
+                  <Camera
+                    size={18}
+                    className="text-white"
+                  />
+                </button>
               </div>
-              <div>
-                <h2 className="text-3xl font-bold">{profile.fullName || 'User'}</h2>
-                <p className="text-white/80 text-lg">{profile.jobTitle || 'Professional'}</p>
+
+              {/* Info */}
+              <div className="flex-1">
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                  <h2 className="text-4xl font-black text-white">
+                    {profile.fullName ||
+                      'User'}
+                  </h2>
+
+                  <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-300">
+                    {authUser?.emailVerified
+                      ? 'Verified'
+                      : 'Free Plan'}
+                  </div>
+                </div>
+
+                <p className="text-lg text-gray-300">
+                  {profile.jobTitle ||
+                    'Professional'}
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300">
+                    <ShieldCheck
+                      size={16}
+                    />
+                    Verified Account
+                  </div>
+
+                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300">
+                    <Sparkles
+                      size={16}
+                    />
+                    AI Resume
+                    Optimization
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Form Section */}
+          {/* Form */}
           <div className="p-8">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Full Name */}
-              <div>
-                <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
-                  <User size={18} />
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={profile.fullName}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  placeholder="Enter your full name"
-                />
-              </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <InputField
+                icon={User}
+                label="Full Name"
+                name="fullName"
+                value={
+                  profile.fullName
+                }
+                onChange={
+                  handleChange
+                }
+                disabled={!isEditing}
+                placeholder="Enter full name"
+              />
 
-              {/* Email */}
-              <div>
-                <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
-                  <Mail size={18} />
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={profile.email}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  placeholder="your.email@example.com"
-                />
-              </div>
+              <InputField
+                icon={Mail}
+                label="Email Address"
+                name="email"
+                value={profile.email}
+                onChange={
+                  handleChange
+                }
+                disabled={!isEditing}
+                placeholder="Enter email"
+              />
 
-              {/* Phone */}
-              <div>
-                <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
-                  <Phone size={18} />
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={profile.phone}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
+              <InputField
+                icon={Phone}
+                label="Phone Number"
+                name="phone"
+                value={profile.phone}
+                onChange={
+                  handleChange
+                }
+                disabled={!isEditing}
+                placeholder="+91 9876543210"
+              />
 
-              {/* Location */}
-              <div>
-                <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
-                  <MapPin size={18} />
-                  Location
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={profile.location}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  placeholder="City, Country"
-                />
-              </div>
+              <InputField
+                icon={MapPin}
+                label="Location"
+                name="location"
+                value={
+                  profile.location
+                }
+                onChange={
+                  handleChange
+                }
+                disabled={!isEditing}
+                placeholder="Surat, India"
+              />
 
-              {/* Job Title */}
               <div className="md:col-span-2">
-                <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
-                  <Briefcase size={18} />
-                  Job Title
-                </label>
-                <input
-                  type="text"
+                <InputField
+                  icon={Briefcase}
+                  label="Job Title"
                   name="jobTitle"
-                  value={profile.jobTitle}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  placeholder="e.g., Software Engineer"
+                  value={
+                    profile.jobTitle
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  disabled={
+                    !isEditing
+                  }
+                  placeholder="Software Engineer"
                 />
               </div>
 
               {/* Bio */}
               <div className="md:col-span-2">
-                <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
-                  <User size={18} />
+                <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-300">
+                  <User size={16} />
                   Bio
                 </label>
+
                 <textarea
                   name="bio"
                   value={profile.bio}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  rows={4}
-                  className={`w-full px-4 py-3 border rounded-lg transition ${isEditing
-                    ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                    : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                  placeholder="Tell us about yourself..."
+                  onChange={
+                    handleChange
+                  }
+                  disabled={
+                    !isEditing
+                  }
+                  rows={5}
+                  className={`w-full rounded-3xl border px-5 py-4 text-white outline-none placeholder:text-gray-500 transition-all duration-300 ${
+                    isEditing
+                      ? 'border-white/10 bg-white/5 focus:border-blue-500/30 focus:bg-white/[0.07]'
+                      : 'cursor-not-allowed border-white/5 bg-white/[0.03]'
+                  }`}
+                  placeholder="Tell something about yourself..."
                 />
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Buttons */}
             {isEditing && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-4 mt-8"
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="mt-8 flex flex-col gap-4 sm:flex-row"
               >
                 <button
-                  onClick={handleSave}
+                  onClick={
+                    handleSave
+                  }
                   disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 font-semibold text-white shadow-2xl shadow-blue-500/20 transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <Save size={20} />
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  <Save size={18} />
+
+                  {saving
+                    ? 'Saving...'
+                    : 'Save Changes'}
                 </button>
+
                 <button
-                  onClick={handleCancel}
+                  onClick={
+                    handleCancel
+                  }
                   disabled={saving}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 text-gray-900 px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 font-semibold text-white transition-all duration-300 hover:bg-white/10"
                 >
-                  <X size={20} />
+                  <X size={18} />
                   Cancel
                 </button>
               </motion.div>
             )}
           </div>
-        </motion.div>
+        </div>
       </motion.div>
+    </div>
+  )
+}
+
+/* Input Component */
+function InputField({
+  icon: Icon,
+  label,
+  name,
+  value,
+  onChange,
+  disabled,
+  placeholder,
+}) {
+  return (
+    <div>
+      <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-300">
+        <Icon size={16} />
+        {label}
+      </label>
+
+      <input
+        type="text"
+        name={name}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className={`w-full rounded-3xl border px-5 py-4 text-white outline-none placeholder:text-gray-500 transition-all duration-300 ${
+          disabled
+            ? 'cursor-not-allowed border-white/5 bg-white/[0.03]'
+            : 'border-white/10 bg-white/5 focus:border-blue-500/30 focus:bg-white/[0.07]'
+        }`}
+      />
     </div>
   )
 }

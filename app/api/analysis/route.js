@@ -3,6 +3,7 @@ import { writeFile, unlink } from 'fs/promises'
 import path from 'path'
 import os from 'os'
 import { v4 as uuidv4 } from 'uuid'
+import { adminAuth } from '@/app/firebase/admin'
 
 import DocumentExtractor from '@/lib/services/documentExtractor'
 import AIAnalyzer from '@/lib/services/aiAnalyzer'
@@ -14,10 +15,31 @@ import { analyzeRisk } from '@/lib/services/riskAnalyzer'
 // 🔴 REQUIRED: force Node runtime (PDF parsing needs fs)
 export const runtime = 'nodejs'
 
+/**
+ * Helper: Extract userId from auth header (optional)
+ */
+async function getUserIdFromRequest(req) {
+  try {
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+    const token = authHeader.split('Bearer ')[1]
+    const decoded = await adminAuth.verifyIdToken(token)
+    return decoded.uid
+  } catch (err) {
+    return null
+  }
+}
+
 export async function POST(req) {
   let filePath = null
+  let userId = null
 
   try {
+    // Extract userId from auth header (optional)
+    userId = await getUserIdFromRequest(req)
+    
     const formData = await req.formData()
     const file = formData.get('file')
 

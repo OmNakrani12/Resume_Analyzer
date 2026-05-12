@@ -1,23 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Github } from 'lucide-react'
 import { auth, googleProvider } from '@/app/firebase/config'
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
-import Cookies from 'js-cookie'
+import { useAuth } from '@/lib/context/AuthContext'
+import { userAPI } from '@/lib/api'
 import AuthLayout from '@/components/AuthLayout'
 import GithubButton from '@/components/GithubButton'
 
 export default function SignIn() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.replace('/dashboard')
+    }
+  }, [user, authLoading, router])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -25,17 +34,11 @@ export default function SignIn() {
     setLoading(true)
 
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password)
-      const token = await cred.user.getIdToken()
-      Cookies.set('token', token, { expires: 7 })
-      localStorage.setItem('user', JSON.stringify({
-        uid: cred.user.uid,
-        email: cred.user.email,
-        name: cred.user.displayName
-      }))
+      await signInWithEmailAndPassword(auth, email, password)
+      // AuthContext will handle state update via onAuthStateChanged
       router.replace('/dashboard')
     } catch (err) {
-      setError('Invalid email or password')
+      setError(err.code === 'auth/invalid-credential' ? 'Invalid email or password' : 'Sign in failed')
     } finally {
       setLoading(false)
     }
@@ -43,13 +46,24 @@ export default function SignIn() {
 
   const handleGoogleLogin = async () => {
     setLoading(true)
+    setError('')
     try {
       const result = await signInWithPopup(auth, googleProvider)
-      const token = await result.user.getIdToken()
-      Cookies.set('token', token, { expires: 7 })
+      const user = result.user
+
+      // Initialize/Update profile in database
+      await userAPI.updateProfile({
+        userId: user.uid,
+        fullName: user.displayName || '',
+        email: user.email || '',
+      })
+
+      // AuthContext will handle state update via onAuthStateChanged
       router.replace('/dashboard')
     } catch (err) {
-      setError('Google login failed')
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError('Google sign in failed')
+      }
     } finally {
       setLoading(false)
     }
