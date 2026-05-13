@@ -12,6 +12,7 @@ import {
   Lock,
   CreditCard,
 } from 'lucide-react'
+import { auth } from '@/app/firebase/config'
 
 export default function CheckoutForm() {
   const stripe = useStripe()
@@ -31,12 +32,40 @@ export default function CheckoutForm() {
     const result = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: 'http://localhost:3000/payment_response',
+        return_url: `${window.location.origin}/payment_response`,
       },
+      redirect: 'if_required'
     })
 
     if (result.error) {
       setError(result.error.message)
+    }
+    else {
+      // ✅ Payment Success (or redirecting)
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken();
+          
+          await fetch('/api/users', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              token,
+              plan: 'pro'
+            })
+          });
+        }
+      } catch (err) {
+        console.error("Plan update failed:", err);
+      }
+
+      // If Stripe didn't redirect automatically, we do it now
+      if (!result.error) {
+        window.location.href = `${window.location.origin}/payment_response`;
+      }
     }
 
     setLoading(false)

@@ -22,10 +22,11 @@ export default function RiskAnalysis({ riskData }) {
         risk_level = 'Unknown',
         red_flags = [],
         recommendations = [],
+        detailed_analysis = {},
         project_analysis = {
-            authenticity_score: 0,
-            detail_level: 'Unknown',
-            observation: ''
+            authenticity_score: detailed_analysis?.authenticity_score || 0,
+            detail_level: detailed_analysis?.project_validity > 70 ? 'High' : 'Standard',
+            observation: detailed_analysis?.exaggeration_check > 50 ? "AI suggests some claims may be exaggerated." : "Consistency appears stable."
         },
         metadata = {}
     } = riskData

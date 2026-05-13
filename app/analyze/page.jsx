@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/lib/context/AuthContext'
+import { userAPI } from '@/lib/api'
 
 import {
   Sparkles,
@@ -14,8 +16,22 @@ import FileUpload from '@/components/FileUpload'
 import AnalysisResults from '@/components/AnalysisResults'
 
 export default function AnalyzePage() {
-  const [analysisResult, setAnalysisResult] =
-    useState(null)
+  const { user } = useAuth()
+  const [analysisResult, setAnalysisResult] = useState(null)
+  const [isPro, setIsPro] = useState(false)
+
+  useEffect(() => {
+    async function checkPlan() {
+      if (user?.uid) {
+        const res = await userAPI.getUser(user.uid)
+        if (res?.success) {
+          const plan = res.user?.plan || 'free'
+          setIsPro(plan === 'pro' || plan === 'professional')
+        }
+      }
+    }
+    checkPlan()
+  }, [user])
 
   return (
     <div className="min-h-screen bg-[#030712] relative overflow-hidden py-14 px-4">
@@ -243,6 +259,7 @@ export default function AnalyzePage() {
                 {/* RESULTS COMPONENT */}
                 <AnalysisResults
                   result={analysisResult}
+                  isPro={isPro}
                 />
               </div>
             </motion.div>

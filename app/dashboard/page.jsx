@@ -20,6 +20,7 @@ export default function Dashboard() {
   const { user: authUser, loading: authLoading, logout } = useAuth()
   const [resumes, setResumes] = useState([])
   const [stats, setStats] = useState([])
+  const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -33,17 +34,26 @@ export default function Dashboard() {
 
         const userId = authUser?.uid || 'default_user'
 
-        const [profileResponse, resumesResponse] = await Promise.all([
+        const [userResponse, profileResponse, resumesResponse] = await Promise.all([
+          userAPI.getUser(),
           userAPI.getProfile(userId),
           resumeAPI.list(userId, 1, 10),
         ])
 
-        const profile = profileResponse?.data || {
+        const userData = userResponse?.user || {}
+        const fetchedProfile = profileResponse?.data || {
           resumesAnalyzed: 0,
           resumeLimit: 10,
-          subscription: 'free',
+          subscription: userData.plan || 'free',
           email: authUser.email || 'user@example.com',
         }
+        
+        // Ensure plan is correctly set from user data if missing in profile
+        if (!fetchedProfile.subscription && userData.plan) {
+          fetchedProfile.subscription = userData.plan
+        }
+
+        setProfile(fetchedProfile)
 
         const resumesList =
           resumesResponse?.data?.resumes || []
@@ -85,12 +95,12 @@ export default function Dashboard() {
             icon: FileText,
             label: 'Resumes Analyzed',
             value: (
-              profile.resumesAnalyzed ||
+              fetchedProfile.resumesAnalyzed ||
               resumesList.length
             ).toString(),
             change: `${
-              (profile.resumeLimit || 10) -
-              (profile.resumesAnalyzed ||
+              (fetchedProfile.resumeLimit || 10) -
+              (fetchedProfile.resumesAnalyzed ||
                 resumesList.length)
             } remaining`,
           },
@@ -99,21 +109,21 @@ export default function Dashboard() {
             label: 'Average ATS Score',
             value: `${avgAtsScore}%`,
             change:
-              (profile.subscription || 'free')
+              (fetchedProfile.subscription || 'free')
                 .charAt(0)
                 .toUpperCase() +
-              (profile.subscription || 'free').slice(1),
+              (fetchedProfile.subscription || 'free').slice(1),
           },
           {
             icon: BarChart3,
             label: 'Subscription',
             value:
-              (profile.subscription || 'free')
+              (fetchedProfile.subscription || 'free')
                 .charAt(0)
                 .toUpperCase() +
-              (profile.subscription || 'free').slice(1),
+              (fetchedProfile.subscription || 'free').slice(1),
             change:
-              profile.email ||
+              fetchedProfile.email ||
               authUser.email ||
               'user@example.com',
           },
@@ -219,6 +229,12 @@ export default function Dashboard() {
                   {' '}
                   {authUser?.displayName || 'Professional'}
                 </span>
+                {profile && profile.subscription && profile.subscription !== 'free' && (
+                  <span className="ml-4 inline-flex items-center gap-1 rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-400 border border-indigo-500/30">
+                    <Sparkles size={12} />
+                    {profile.subscription.charAt(0).toUpperCase() + profile.subscription.slice(1)}
+                  </span>
+                )}
               </h1>
 
               <p className="text-slate-400 text-lg mt-5 max-w-2xl leading-relaxed">

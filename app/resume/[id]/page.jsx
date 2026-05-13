@@ -21,6 +21,7 @@ import { Sparkles } from 'lucide-react'
 import { resumeAPI } from '@/lib/api'
 import { generateAnalysisPDF } from '@/lib/utils/pdfGenerator'
 import { useAuth } from '@/lib/context/AuthContext'
+import { userAPI } from '@/lib/api'
 
 import ATSScoreCard from '@/components/ATSScoreCard'
 import SkillsMatrix from '@/components/SkillsMatrix'
@@ -37,6 +38,21 @@ export default function ResumeViewPage() {
   const [resumeData, setResumeData] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [downloading, setDownloading] = useState(false)
+  const [isPro, setIsPro] = useState(false)
+
+  /* ================= FETCH USER PLAN ================= */
+  useEffect(() => {
+    async function checkPlan() {
+      if (authUser?.uid) {
+        const res = await userAPI.getUser(authUser.uid)
+        if (res?.success) {
+          const plan = res.user?.plan || 'free'
+          setIsPro(plan === 'pro' || plan === 'professional')
+        }
+      }
+    }
+    checkPlan()
+  }, [authUser])
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {
@@ -122,9 +138,12 @@ export default function ResumeViewPage() {
     { id: 'overview', label: 'Overview', icon: Brain },
     { id: 'ats', label: 'ATS Score', icon: Target },
     { id: 'skills', label: 'Skills', icon: TrendingUp },
-    { id: 'roadmap', label: 'Roadmap', icon: Map },
-    { id: 'risk', label: 'Risk', icon: Shield }
+    { id: 'roadmap', label: 'Roadmap', icon: Map }
   ]
+
+  if (isPro) {
+    tabs.push({ id: 'risk', label: 'Risk', icon: Shield })
+  }
 
   return (
     <div className="min-h-screen bg-[#030712] py-8 px-4 relative overflow-hidden">
@@ -325,7 +344,7 @@ export default function ResumeViewPage() {
             )}
 
             {/* RISK */}
-            {activeTab === 'risk' && (
+            {activeTab === 'risk' && isPro && (
               <motion.div key="risk" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }}>
                 <RiskAnalysis riskData={analysis.riskAnalysis || {}} />
               </motion.div>

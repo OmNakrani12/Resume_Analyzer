@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 
 import Link from 'next/link'
+import logo from '@/public/logo.png'
+import Image from 'next/image'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -36,12 +38,22 @@ export default function Footer() {
           >
             {/* Logo */}
             <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 p-3 shadow-lg shadow-blue-500/20">
-                <Sparkles className="text-white" size={24} />
+              <div className="rounded-2xl">
+                <Image 
+                  src={logo} 
+                  alt="Logo"
+                  width={60}
+                  height={60}
+                  className=""
+                />
               </div>
 
-              <h2 className="text-3xl font-black tracking-tight text-white">
-                ResumeAI
+              <h2 className="flex text-4xl font-black tracking-tight text-white">
+                <span>Resu</span>
+
+                <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+                  Nexa
+                </span>
               </h2>
             </div>
 

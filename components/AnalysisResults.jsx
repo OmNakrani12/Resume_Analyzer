@@ -12,16 +12,19 @@ import {
   Download,
   Loader2,
   Sparkles,
+  Shield,
 } from 'lucide-react'
 
 import ATSScoreCard from './ATSScoreCard'
 import SkillsMatrix from './SkillsMatrix'
 import LearningRoadmap from './LearningRoadmap'
+import RiskAnalysis from './RiskAnalysis'
 import { generateAnalysisPDF } from '@/lib/utils/pdfGenerator'
 
 export default function AnalysisResults({
   result,
   fileName = 'Resume',
+  isPro = false,
 }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [downloading, setDownloading] = useState(false)
@@ -64,6 +67,15 @@ export default function AnalysisResults({
       icon: Map,
     },
   ]
+
+  // Add Risk tab only for Pro users
+  if (isPro) {
+    tabs.push({
+      id: 'risk',
+      label: 'Risk',
+      icon: Shield,
+    })
+  }
 
   const aiAnalysis = result.ai_analysis || result
   const atsScore = result.ats_score
@@ -532,6 +544,27 @@ export default function AnalysisResults({
             }}
           >
             <LearningRoadmap roadmapData={roadmap} />
+          </motion.div>
+        )}
+
+        {/* RISK (Pro Only) */}
+        {activeTab === 'risk' && isPro && (
+          <motion.div
+            key="risk"
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -20,
+            }}
+          >
+            <RiskAnalysis riskData={result.risk_analysis || {}} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Check,
@@ -9,10 +9,30 @@ import {
   Crown,
   X,
 } from 'lucide-react'
+import { userAPI } from '@/lib/api'
+import { useAuth } from '@/lib/context/AuthContext'
 
 export default function Pricing() {
+  const { user: authUser, loading: authLoading } = useAuth()
   const [selectedPlan, setSelectedPlan] = useState(null)
+  const [userPlan, setUserPlan] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      if (authLoading || !authUser) return
+
+      try {
+        const res = await userAPI.getUser()
+        if (res.success && res.user) {
+          setUserPlan(res.user.plan || 'free')
+        }
+      } catch (err) {
+        console.error("Failed to fetch user plan", err)
+      }
+    }
+    fetchUserPlan()
+  }, [authUser, authLoading])
 
   const plans = [
     {
@@ -81,7 +101,7 @@ export default function Pricing() {
     }
 
     if (selectedPlan.type === 'enterprise') {
-      window.location.href = '/contact'
+      window.location.href = '/contact?plan=enterprise'
       return
     }
 
@@ -150,31 +170,46 @@ export default function Pricing() {
             const Icon = plan.icon
             const isSelected = selectedPlan?.id === plan.id
 
-            return (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.15 }}
-                whileHover={{
-                  y: -10,
-                  scale: 1.02,
-                }}
-                onClick={() => setSelectedPlan(plan)}
-                className={`relative cursor-pointer overflow-hidden rounded-3xl border transition-all duration-300 ${
-                  isSelected
-                    ? 'border-blue-500 bg-white/10 shadow-2xl shadow-blue-500/20'
-                    : 'border-white/10 bg-white/5 hover:border-white/20'
-                } backdrop-blur-2xl`}
-              >
+                const isActive = (plan.id === 'pro' && (userPlan === 'pro' || userPlan === 'professional')) || 
+                                (plan.id === userPlan) || 
+                                (plan.id === 'free' && (!userPlan || userPlan === 'free'))
+
+                return (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.15 }}
+                    whileHover={{
+                      y: -10,
+                      scale: 1.02,
+                    }}
+                    onClick={() => {isActive ? setSelectedPlan(null) : setSelectedPlan(plan)}}
+                    className={`relative cursor-pointer overflow-hidden rounded-3xl border transition-all duration-300 ${
+                      isActive
+                        ? 'border-emerald-500 bg-emerald-500/5 shadow-2xl shadow-emerald-500/20'
+                        : isSelected
+                        ? 'border-blue-500 bg-white/10 shadow-2xl shadow-blue-500/20'
+                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                    } backdrop-blur-2xl`}
+                  >
                 {/* Glow Layer */}
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-10`}
                 />
 
+                {/* Active Plan Badge */}
+                {isActive && (
+                  <div className="absolute inset-x-0 top-0 flex justify-center">
+                    <div className="rounded-b-2xl bg-emerald-500 px-6 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#050816] shadow-lg shadow-emerald-500/20">
+                      Your Current Plan
+                    </div>
+                  </div>
+                )}
+
                 {/* Popular Badge */}
                 {plan.highlight && (
-                  <div className="absolute right-4 top-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-1 text-xs font-bold tracking-wide text-white">
+                  <div className={`absolute right-4 top-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-1 text-xs font-bold tracking-wide text-white shadow-lg shadow-blue-500/20`}>
                     MOST POPULAR
                   </div>
                 )}

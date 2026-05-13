@@ -3,14 +3,14 @@ import { writeFile, unlink } from 'fs/promises'
 import path from 'path'
 import os from 'os'
 import { v4 as uuidv4 } from 'uuid'
-import { adminAuth } from '@/app/firebase/admin'
+import { adminAuth, rtdb } from '@/app/firebase/admin'
 
 import DocumentExtractor from '@/lib/services/documentExtractor'
 import AIAnalyzer from '@/lib/services/aiAnalyzer'
 import SkillExtractor from '@/lib/services/skillExtractor'
 import ATSScorer from '@/lib/services/atsScorer'
 import RoadmapGenerator from '@/lib/services/roadmapGenerator'
-import { analyzeRisk } from '@/lib/services/riskAnalyzer'
+import { analyzeRisk, analyzeRiskAI } from '@/lib/services/riskAnalyzer'
 
 // 🔴 REQUIRED: force Node runtime (PDF parsing needs fs)
 export const runtime = 'nodejs'
@@ -99,10 +99,31 @@ export async function POST(req) {
     )
 
     // Step 6: Risk analysis
-    const riskAnalysis = await analyzeRisk(resumeText, {
-      skills: skillAnalysis,
-      atsScore: atsResult
-    })
+    let riskAnalysis = null
+    
+    if (userId) {
+      const userSnap = await rtdb.ref(`users/${userId}`).get()
+      const userData = userSnap.val() || {}
+      const userPlan = userData.plan || 'free'
+      
+      // Pro users get AI-powered risk analysis
+      if (userPlan === 'pro' || userPlan === 'professional') {
+        riskAnalysis = await analyzeRiskAI(resumeText)
+      }
+    }
+
+    // Fallback to basic analysis if not Pro or if AI analysis failed
+    if (!riskAnalysis) {
+      riskAnalysis = await analyzeRisk(resumeText, {
+        skills: skillAnalysis,
+        atsScore: atsResult
+      })
+      
+      // Add a note if they are not Pro
+      if (riskAnalysis) {
+        riskAnalysis.is_basic = true
+      }
+    }
 
     return NextResponse.json({
       success: true,

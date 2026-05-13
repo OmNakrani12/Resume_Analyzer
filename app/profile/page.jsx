@@ -167,7 +167,6 @@ export default function ProfilePage() {
       }, 3000)
     } catch (err) {
       console.error(err)
-
       setError(
         'Failed to update profile'
       )
@@ -178,9 +177,7 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setIsEditing(false)
-
     setError('')
-
     setSuccess('')
   }
 
