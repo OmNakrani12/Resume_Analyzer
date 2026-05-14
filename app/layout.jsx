@@ -28,6 +28,9 @@ export const metadata = {
     'Resume Score',
     'Resume Optimization',
   ],
+  verification: {
+    google: '11bpScKG72MZADwLlSvLmWgamZJjRQc7WC_7wVSRUDw',
+  }
 }
 
 export default function RootLayout({ children }) {
