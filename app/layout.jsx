@@ -16,9 +16,18 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata = {
-  title: 'Resume Analyzer - AI Powered ATS Resume Scanner',
+  title: 'ResuNexa - AI-Powered Resume Optimization',
   description:
     'Optimize your resume using AI-powered ATS analysis and increase your interview chances.',
+  icons: {
+    icon: "/logo.png",
+  },
+  keywords: [
+    'AI Resume Analyzer',
+    'ATS Checker',
+    'Resume Score',
+    'Resume Optimization',
+  ],
 }
 
 export default function RootLayout({ children }) {

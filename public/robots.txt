@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://resume-ai-virid-one.vercel.app
+
+# Sitemaps
+Sitemap: https://resume-ai-virid-one.vercel.app/sitemap.xml
