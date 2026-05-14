@@ -12,11 +12,6 @@ import {
 import { userAPI } from '@/lib/api'
 import { useAuth } from '@/lib/context/AuthContext'
 
-export const metadata = {
-  title: 'Pricing - Resunexa',
-  description: 'Choose the best plan for resume analysis.',
-}
-
 export default function Pricing() {
   const { user: authUser, loading: authLoading } = useAuth()
   const [selectedPlan, setSelectedPlan] = useState(null)
