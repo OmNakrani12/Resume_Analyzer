@@ -21,7 +21,7 @@ export const metadata = {
   description:
     'Optimize your resume using AI-powered ATS analysis and increase your interview chances.',
   icons: {
-    icon: {logo},
+    icon: logo.src,
   },
   keywords: [
     'AI Resume Analyzer',
