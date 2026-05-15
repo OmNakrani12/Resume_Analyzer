@@ -4,6 +4,7 @@ import './globals.css'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { AuthProvider } from '@/lib/context/AuthContext'
+import logo from '@/public/logo.png'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -20,7 +21,7 @@ export const metadata = {
   description:
     'Optimize your resume using AI-powered ATS analysis and increase your interview chances.',
   icons: {
-    icon: "/logo.png",
+    icon: {logo},
   },
   keywords: [
     'AI Resume Analyzer',
