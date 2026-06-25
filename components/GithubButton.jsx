@@ -37,9 +37,9 @@ export default function GithubButton() {
         auth,
         githubProvider
       )
-      
+
       const user = result.user
-      
+
       // Initialize/Update profile in database
       await userAPI.updateProfile({
         userId: user.uid,
@@ -50,62 +50,62 @@ export default function GithubButton() {
       // AuthContext will handle token sync via onAuthStateChanged
       router.push('/dashboard')
     } catch (err) {
-        console.error(err)
-        switch (err.code) {
-            case 'auth/account-exists-with-different-credential':
-            setError(
-                'An account already exists with this email using another sign-in method.'
-            )
-            break
+      console.error(err)
+      switch (err.code) {
+        case 'auth/account-exists-with-different-credential':
+          setError(
+            'An account already exists with this email using another sign-in method.'
+          )
+          break
 
-            case 'auth/popup-closed-by-user':
-            setError(
-                'Login popup was closed before completing sign in.'
-            )
-            break
+        case 'auth/popup-closed-by-user':
+          setError(
+            'Login popup was closed before completing sign in.'
+          )
+          break
 
-            case 'auth/popup-blocked':
-            setError(
-                'Popup was blocked by browser. Please allow popups.'
-            )
-            break
+        case 'auth/popup-blocked':
+          setError(
+            'Popup was blocked by browser. Please allow popups.'
+          )
+          break
 
-            case 'auth/network-request-failed':
-            setError(
-                'Network error. Please check your internet connection.'
-            )
-            break
+        case 'auth/network-request-failed':
+          setError(
+            'Network error. Please check your internet connection.'
+          )
+          break
 
-            case 'auth/too-many-requests':
-            setError(
-                'Too many attempts. Please try again later.'
-            )
-            break
+        case 'auth/too-many-requests':
+          setError(
+            'Too many attempts. Please try again later.'
+          )
+          break
 
-            case 'auth/cancelled-popup-request':
-            setError(
-                'Another popup is already open.'
-            )
-            break
+        case 'auth/cancelled-popup-request':
+          setError(
+            'Another popup is already open.'
+          )
+          break
 
-            default:
-            setError(
-                'GitHub login failed. Please try again.'
-            )
-        }
+        default:
+          setError(
+            'GitHub login failed. Please try again.'
+          )
+      }
     } finally {
-        setLoading(false)
+      setLoading(false)
     }
   }
 
   return (
-      <button
-            type="button"
-            onClick={handleGithubLogin}
-            className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white py-3 rounded-2xl font-bold hover:bg-white/10 transition"
-          >
-            <Github className="w-5 h-5" />
-            GitHub
-          </button>
+    <button
+      type="button"
+      onClick={handleGithubLogin}
+      className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white py-3 rounded-2xl font-bold hover:bg-white/10 transition"
+    >
+      <Github className="w-5 h-5" />
+      GitHub
+    </button>
   )
 }

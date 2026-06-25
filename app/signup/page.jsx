@@ -96,7 +96,7 @@ export default function SignUp() {
         err.code === 'auth/email-already-in-use'
           ? 'Email already registered'
           : err.message ||
-            'Registration failed'
+          'Registration failed'
       )
     } finally {
       setLoading(false)
@@ -130,7 +130,7 @@ export default function SignUp() {
         if (err.code !== 'auth/popup-closed-by-user') {
           setError(
             err.message ||
-              'Google sign up failed'
+            'Google sign up failed'
           )
         }
       } finally {

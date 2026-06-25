@@ -70,7 +70,7 @@ export default function VerifyEmail() {
   return (
     <AuthLayout title="Final Step" subtitle="Let's confirm your identity">
       <div className="space-y-10 py-4 text-center">
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="relative w-24 h-24 mx-auto"
@@ -108,7 +108,7 @@ export default function VerifyEmail() {
           >
             {loading ? <RefreshCw className="animate-spin" size={20} /> : 'I have verified my email'}
           </button>
-          
+
           <button
             onClick={handleResend}
             disabled={loading}

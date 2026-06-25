@@ -59,7 +59,7 @@ export default function SignIn() {
       })
 
       // AuthContext will handle state update via onAuthStateChanged
-      router.replace('/dashboard')
+      router.push('/dashboard')
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         setError('Google sign in failed')

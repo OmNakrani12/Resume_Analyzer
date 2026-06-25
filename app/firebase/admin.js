@@ -2,9 +2,9 @@ import admin from "firebase-admin";
 
 if (!admin.apps.length) {
   // Validate required environment variables
-  const projectId = process.env.PROJECTID;
-  const clientEmail = process.env.CLIENTEMAIL;
-  const privateKey = process.env.PRIVATEKEY;
+  const projectId = process.env.PROJECTID || process.env.PROJECT_ID || process.env.NEXT_PUBLIC_PROJECTID;
+  const clientEmail = process.env.CLIENTEMAIL || process.env.clientEmail || process.env.client_email;
+  const privateKey = process.env.PRIVATEKEY || process.env.privateKey || process.env.private_key;
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
