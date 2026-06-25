@@ -37,6 +37,7 @@ import { auth } from '@/app/firebase/config'
 import ProfileDropdown from './ProfileDropdown'
 
 import logo from '../public/logo.png'
+import { userAPI } from '@/lib/api'
 
 export default function Navigation() {
   const router = useRouter()
@@ -49,20 +50,34 @@ export default function Navigation() {
 
   const [user, setUser] =
     useState(null)
+  
+  const [userPlan, setUserPlan] = useState('free')
 
   /* ================= AUTH ================= */
   useEffect(() => {
     const unsubscribe =
-      onAuthStateChanged(
-        auth,
-        (currentUser) => {
-          setUser(currentUser)
-        }
-      )
-
+    onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        setUser(currentUser)
+        fetchUserPlan(currentUser)
+      }
+    )
     return () => unsubscribe()
   }, [])
-
+  
+  const fetchUserPlan = async (currentUser) => {
+    console.log("Fetching user plan for:", currentUser?.uid)
+    if (!currentUser) return
+    try {
+      const res = await userAPI.getUser()
+      if (res.success && res.user) {
+        setUserPlan(res.user.plan || 'free')
+      }
+    } catch (err) {
+      console.error("Failed to fetch user plan", err)
+    }
+  }
   /* ================= SCROLL ================= */
   useEffect(() => {
     const handleScroll = () => {
@@ -246,6 +261,7 @@ export default function Navigation() {
                 duration: 0.5,
               }}
             >
+            {(user && userPlan === 'free') ?
               <Link
                 href="/pricing"
                 className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-2xl shadow-blue-500/20 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/30"
@@ -259,6 +275,7 @@ export default function Navigation() {
                   className="transition-transform group-hover:translate-x-1"
                 />
               </Link>
+              : null}
             </motion.div>
 
             {/* Auth */}
